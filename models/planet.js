@@ -1,5 +1,5 @@
 import { Container } from 'pixi.js';
-import { Button } from '../button'
+import { Button } from '../ui/button-view'
 import { Ticker } from '../engine/ticker';
 import { GameContext } from './game-context';
 import { Transform } from './transform'

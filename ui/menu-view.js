@@ -1,6 +1,6 @@
 "use strict"
 
-import { Button } from "../button";
+import { Button } from "./button-view";
 import { GameContext } from "../models/game-context";
 
 const { Application } = require("pixi.js");

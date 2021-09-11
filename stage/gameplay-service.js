@@ -1,5 +1,5 @@
 import { Application } from 'pixi.js';
-import { Button } from '../button';
+import { Button } from '../ui/button-view';
 import { GameContext } from '../models/game-context';
 import { Planet } from '../models/planet';
 import * as M from '../utils/math';
