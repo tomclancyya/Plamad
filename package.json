@@ -1,0 +1,26 @@
+{
+  "name": "FrontendPixi",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@pixi/interaction": "^6.1.2",
+    "chai": "^4.3.4",
+    "decimal.js-light": "^2.5.1",
+    "mocha": "^9.1.0",
+    "pixi.js": "^6.1.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "babelify": "^10.0.0",
+    "jest": "^27.0.6"
+  }
+}
