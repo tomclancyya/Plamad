@@ -1,6 +1,7 @@
 import { Vector2 } from "../utils/vector2";
+import { Input } from "./input";
 
-export class Input {
+export class InputPlayer extends Input {
 
     /** 
      * @type {boolean}
@@ -11,7 +12,7 @@ export class Input {
     isUp = false;
     isDown = false;
 
-    getInputDirection(convertToPixiCoordinate = false){
+    getInputDirection(){
         let vectorMovement = new Vector2()
 
         if (this.isUp){
@@ -32,13 +33,11 @@ export class Input {
         
 
         let normalized = vectorMovement.getNormalized();
-        if (convertToPixiCoordinate)
-            return new Phaser.Math.Vector2(normalized.x, -normalized.y)
-        else 
-            return normalized;
-
+        return normalized;
     }
 
 
-    constructor (){}
+    constructor (){
+        super()
+    }
 }

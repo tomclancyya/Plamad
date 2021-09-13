@@ -22,13 +22,14 @@ const { Container } = require('pixi.js');
     /** 
     * @param {number} x
     * @param {number} y  
-    * @param {number} radius 
+    * @param {number} diameter 
     * @param {string} text 
     * @param {string} backgroundColor 
     * @param {Container} parent 
     */     
-    constructor (x, y, radius, text, backgroundColor = '0x6699ff', parent) {
+    constructor (x, y, diameter, text, backgroundColor = '0x6699ff', parent) {
 
+    let radius = diameter / 2
     let PIXI = require('pixi.js');
     let circle = new PIXI.Graphics();
     let container = new PIXI.Container();
@@ -40,7 +41,7 @@ const { Container } = require('pixi.js');
     circle.beginFill(backgroundColor).lineStyle(5, 'red', 1);    
     circle.drawCircle(0, 0, radius);
     circle.endFill();
-    circle.pivot.set(radius, radius);
+    //circle.pivot.set(radius, radius);
 
     let textObject = new PIXI.Text(text, textStyle);
     textObject.anchor.set(0.5)
@@ -53,12 +54,11 @@ const { Container } = require('pixi.js');
     container.x = x;
     container.y = y;
 
-    this.updateCoordinate = function(x,y) {
-        container.x = x;
-        container.y = y;
-    }
-
     this.container = container;
+
+    this.delete = function() {
+        parent.removeChild(container)
+    }
 
     return this;
 }

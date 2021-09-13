@@ -1734,10 +1734,10 @@ module.exports = {
 },{}],9:[function(require,module,exports){
 "use strict";
 
-var _require = require('./models/input.js'),
-    Input = _require.Input;
+var _require = require('./input/input-player.js'),
+    InputPlayer = _require.InputPlayer;
 
-var input = new Input();
+var input = new InputPlayer();
 document.addEventListener('keydown', function (event) {
   if (event.code == 'ArrowUp') {
     input.isUp = true;
@@ -1777,7 +1777,171 @@ var gameView = require('./game.js')(input);
 
 document.getElementById('game').appendChild(gameView);
 
-},{"./game.js":11,"./models/input.js":13}],10:[function(require,module,exports){
+},{"./game.js":13,"./input/input-player.js":16}],10:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CollisionEngine = void 0;
+
+var _gameContext = require("../models/game-context");
+
+var _meteor = require("../models/meteor");
+
+var _planet = require("../models/planet");
+
+var _scene = require("../models/scene");
+
+var _ticker = require("./ticker");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var CollisionEngine = /*#__PURE__*/function () {
+  /** 
+  * @param {Scene} scene  
+  */
+  function CollisionEngine(scene, fps) {
+    var _this = this;
+
+    _classCallCheck(this, CollisionEngine);
+
+    _defineProperty(this, "scene", void 0);
+
+    this.scene = scene;
+    new _ticker.Ticker(fps, function (delta) {
+      _this.isPlanetCollidesMeteor();
+    });
+  }
+
+  _createClass(CollisionEngine, [{
+    key: "getPlanets",
+    value:
+    /** 
+    * @type {Scene}
+    * @public
+    */
+
+    /** 
+     * @return {Planet[]}
+     * @public
+     */
+    function getPlanets() {
+      return this.scene.getPlanets();
+    }
+    /** 
+     * @type {Meteor[]}
+     * @public
+     */
+
+  }, {
+    key: "getMeteors",
+    value: function getMeteors() {
+      return this.scene.getMeteors();
+    }
+  }, {
+    key: "isPlanetCollidesPlanet",
+    value: function isPlanetCollidesPlanet() {
+      var planets = this.getPlanets(); // we are using multiplications because it's faster than calling Math.pow
+
+      for (var i = 0; i < planets.length; i++) {
+        for (var j = 0; j < planets.length; j++) {
+          var planet1 = planets[i];
+          var planet2 = planets[j];
+          if (planet1 == planet2) continue;
+          planet1.onCollidePlanet(planet2);
+        }
+      }
+    }
+  }, {
+    key: "isPlanetCollidesMeteor",
+    value: function isPlanetCollidesMeteor() {
+      var planets = this.getPlanets();
+      var meteors = this.getMeteors();
+      planets.map(function (planet) {
+        return meteors.map(function (meteor) {
+          return planet.onCollideMeteor(meteor);
+        });
+      });
+    }
+  }]);
+
+  return CollisionEngine;
+}();
+
+exports.CollisionEngine = CollisionEngine;
+
+},{"../models/game-context":18,"../models/meteor":20,"../models/planet":21,"../models/scene":22,"./ticker":12}],11:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Random = void 0;
+
+var _Prando = _interopRequireDefault(require("Prando"));
+
+var _vector = require("../utils/vector2");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Random = /*#__PURE__*/function () {
+  /**
+   * @type {Prando}
+   */
+
+  /**
+   * 
+   * @param {Prando} randomizerEngine 
+   */
+  function Random(randomizerEngine) {
+    _classCallCheck(this, Random);
+
+    _defineProperty(this, "randomizerEngine", void 0);
+
+    this.randomizerEngine = randomizerEngine;
+  }
+  /**
+   * 
+   * @param {number} min include
+   * @param {number} max include
+   */
+
+
+  _createClass(Random, [{
+    key: "getVectorSquare",
+    value: function getVectorSquare(min, max) {
+      var xRandom = this.randomizerEngine.next(min, max);
+      var yRandom = this.randomizerEngine.next(min, max);
+      return new _vector.Vector2(xRandom, yRandom);
+    }
+  }, {
+    key: "getVector",
+    value: function getVector() {
+      return this.getVectorSquare(-1, 1);
+    }
+  }]);
+
+  return Random;
+}();
+
+exports.Random = Random;
+
+},{"../utils/vector2":77,"Prando":59}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1788,31 +1952,34 @@ exports.Ticker = void 0;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Ticker = function Ticker(tickPerSeconds, callback) {
-  var _this = this;
-
   _classCallCheck(this, Ticker);
 
   this.previousTime = Date.now();
   var delta = 1 / tickPerSeconds * 1000;
   setInterval(function () {
-    var delta = Date.now() - _this.previousTime;
-
-    _this.previousTime = Date.now(); //console.log(delta)
-
+    //let delta = Date.now() - this.previousTime;
+    //this.previousTime = Date.now()
+    //console.log(delta)
     callback(delta);
   }, delta);
 };
 
 exports.Ticker = Ticker;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
-var _require = require('./models/game-context'),
-    GameContext = _require.GameContext;
+var _require = require('prando'),
+    Prando = _require["default"];
 
-var _require2 = require('./stage/menu-service'),
-    MenuService = _require2.MenuService;
+var _require2 = require('./engine/random'),
+    Random = _require2.Random;
+
+var _require3 = require('./models/game-context'),
+    GameContext = _require3.GameContext;
+
+var _require4 = require('./stage/menu-service'),
+    MenuService = _require4.MenuService;
 
 module.exports = function (input) {
   var PIXI = require('pixi.js');
@@ -1823,64 +1990,36 @@ module.exports = function (input) {
     height: 500,
     backgroundColor: '0x001122'
   }); //app.renderer.resize(window.innerWidth, window.innerHeight);
+  //  app.renderer.view.style.position = 'absolute';
+  // focus on canvas
+  // app.renderer.view.setAttribute('tabindex', 0);    
 
-  app.renderer.view.style.position = 'absolute'; // focus on canvas
-
-  app.renderer.view.setAttribute('tabindex', 0);
-  new MenuService(new GameContext(app, input));
+  var random = new Random(new Prando(1));
+  new MenuService(new GameContext(app, input, random));
   return app.view;
 };
 
-},{"./models/game-context":12,"./stage/menu-service":59,"pixi.js":56}],12:[function(require,module,exports){
+},{"./engine/random":11,"./models/game-context":18,"./stage/menu-service":69,"pixi.js":65,"prando":66}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.GameContext = void 0;
+exports.Bot = void 0;
 
-var _input = require("./input");
+var _ticker = require("../engine/ticker");
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _planet = require("../models/planet");
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+var _planetView = require("../ui/planet-view");
 
-var _require = require("pixi.js"),
-    Application = _require.Application;
-
-var GameContext =
-/** 
-* @param {Application} app  
-*/
-
-/** 
-* @param {Input} input  
-*/
-function GameContext(app, input) {
-  _classCallCheck(this, GameContext);
-
-  _defineProperty(this, "settings", {
-    engineFps: 30,
-    mapSize: 2000
-  });
-
-  this.app = app;
-  this.input = input;
-};
-
-exports.GameContext = GameContext;
-
-},{"./input":13,"pixi.js":56}],13:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Input = void 0;
+var _timer = require("../utils/timer");
 
 var _vector = require("../utils/vector2");
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _input = require("./input");
+
+var _inputBot = require("./input-bot");
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
@@ -1888,20 +2027,190 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var Input = /*#__PURE__*/function () {
-  function Input() {
-    _classCallCheck(this, Input);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    _defineProperty(this, "isLeft", false);
+var Bot =
+/**
+ * @type {Input}
+ */
+//input = new InputBot()
+function Bot(pixiStage, scene, fps, random) {
+  _classCallCheck(this, Bot);
 
-    _defineProperty(this, "isRight", false);
+  var input = new _inputBot.InputBot();
+  var planetView = new _planetView.PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
+  var planet = new _planet.Planet(planetView.container, input, scene, fps);
+  var move = new MovingState(planet, scene, input, random);
+  new _ticker.Ticker(fps, function (delta) {
+    move.update(delta);
+  });
+};
 
-    _defineProperty(this, "isUp", false);
+exports.Bot = Bot;
 
-    _defineProperty(this, "isDown", false);
+var MovingState = /*#__PURE__*/function () {
+  function MovingState(planet, scene, input, random) {
+    _classCallCheck(this, MovingState);
+
+    _defineProperty(this, "currentDirection", new _vector.Vector2(1, 1));
+
+    _defineProperty(this, "timer", new _timer.Timer(500));
+
+    _defineProperty(this, "random", void 0);
+
+    this.planet = planet;
+    this.scene = scene;
+    this.input = input;
+    this.random = random;
+    this.currentDirection = random.getVector();
   }
 
-  _createClass(Input, [{
+  _createClass(MovingState, [{
+    key: "update",
+    value: function update(delta) {
+      this.input.setInputDirection(this.currentDirection);
+      this.timer.update(delta);
+
+      if (this.timer.isFinished()) {
+        this.timer.reset();
+        this.currentDirection = this.random.getVector().getNormalized();
+      }
+    }
+  }]);
+
+  return MovingState;
+}();
+
+},{"../engine/ticker":12,"../models/planet":21,"../ui/planet-view":74,"../utils/timer":76,"../utils/vector2":77,"./input":17,"./input-bot":15}],15:[function(require,module,exports){
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.InputBot = void 0;
+
+var _vector = require("../utils/vector2");
+
+var _input = require("./input");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var InputBot = /*#__PURE__*/function (_Input) {
+  _inherits(InputBot, _Input);
+
+  var _super = _createSuper(InputBot);
+
+  function InputBot() {
+    var _this;
+
+    _classCallCheck(this, InputBot);
+
+    _this = _super.call(this);
+
+    _defineProperty(_assertThisInitialized(_this), "input", new _vector.Vector2(0, 0));
+
+    return _this;
+  }
+
+  _createClass(InputBot, [{
+    key: "setInputDirection",
+    value: function setInputDirection(input) {
+      this.input = input;
+    }
+  }, {
+    key: "getInputDirection",
+    value: function getInputDirection() {
+      return this.input;
+    }
+  }]);
+
+  return InputBot;
+}(_input.Input);
+
+exports.InputBot = InputBot;
+
+},{"../utils/vector2":77,"./input":17}],16:[function(require,module,exports){
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.InputPlayer = void 0;
+
+var _vector = require("../utils/vector2");
+
+var _input = require("./input");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var InputPlayer = /*#__PURE__*/function (_Input) {
+  _inherits(InputPlayer, _Input);
+
+  var _super = _createSuper(InputPlayer);
+
+  function InputPlayer() {
+    var _this;
+
+    _classCallCheck(this, InputPlayer);
+
+    _this = _super.call(this);
+
+    _defineProperty(_assertThisInitialized(_this), "isLeft", false);
+
+    _defineProperty(_assertThisInitialized(_this), "isRight", false);
+
+    _defineProperty(_assertThisInitialized(_this), "isUp", false);
+
+    _defineProperty(_assertThisInitialized(_this), "isDown", false);
+
+    return _this;
+  }
+
+  _createClass(InputPlayer, [{
     key: "getInputDirection",
     value:
     /** 
@@ -1909,7 +2218,6 @@ var Input = /*#__PURE__*/function () {
      * @public
      */
     function getInputDirection() {
-      var convertToPixiCoordinate = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var vectorMovement = new _vector.Vector2();
 
       if (this.isUp) {
@@ -1929,7 +2237,43 @@ var Input = /*#__PURE__*/function () {
       }
 
       var normalized = vectorMovement.getNormalized();
-      if (convertToPixiCoordinate) return new Phaser.Math.Vector2(normalized.x, -normalized.y);else return normalized;
+      return normalized;
+    }
+  }]);
+
+  return InputPlayer;
+}(_input.Input);
+
+exports.InputPlayer = InputPlayer;
+
+},{"../utils/vector2":77,"./input":17}],17:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Input = void 0;
+
+var _vector = require("../utils/vector2");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+/**
+ * @interface
+ */
+var Input = /*#__PURE__*/function () {
+  function Input() {
+    _classCallCheck(this, Input);
+  }
+
+  _createClass(Input, [{
+    key: "getInputDirection",
+    value: function getInputDirection() {
+      throw new Error('not implemented');
     }
   }]);
 
@@ -1938,7 +2282,202 @@ var Input = /*#__PURE__*/function () {
 
 exports.Input = Input;
 
-},{"../utils/vector2":63}],14:[function(require,module,exports){
+},{"../utils/vector2":77}],18:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.GameContext = void 0;
+
+var _random = require("../engine/random");
+
+var _inputPlayer = require("../input/input-player");
+
+var _scene = require("./scene");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _require = require("pixi.js"),
+    Application = _require.Application;
+
+var GameContext =
+/** 
+* @param {Application} app  
+*/
+
+/** 
+* @param {InputPlayer} input  
+*/
+
+/** 
+* @type {Scene} scene  
+*/
+
+/**
+ * @type {Random}
+ */
+function GameContext(app, input, random) {
+  _classCallCheck(this, GameContext);
+
+  _defineProperty(this, "scene", null);
+
+  _defineProperty(this, "random", void 0);
+
+  _defineProperty(this, "settings", {
+    engineFps: 30,
+    mapSize: 2000
+  });
+
+  this.app = app;
+  this.input = input;
+  this.random = random;
+};
+
+exports.GameContext = GameContext;
+
+},{"../engine/random":11,"../input/input-player":16,"./scene":22,"pixi.js":65}],19:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MeteorSpawner = void 0;
+
+var _pixi = require("pixi.js");
+
+var _random = require("../engine/random");
+
+var _ticker = require("../engine/ticker");
+
+var _meteorView = require("../ui/meteor-view");
+
+var _meteor = require("./meteor");
+
+var _scene = require("./scene");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MeteorSpawner =
+/**
+ * 
+ * @param {Random} random 
+ * @param {Scene} scene 
+ * @param {Container} pixiStage 
+ * @param {number} maxAmount 
+ * @param {number} spawnPerSecond 
+ * @param {typeof MeteorView} meteorViewClass - will move MeteorView class reference upper
+ */
+function MeteorSpawner(random, scene, pixiStage, maxAmount, spawnPerSecond, meteorViewClass) {
+  _classCallCheck(this, MeteorSpawner);
+
+  new _ticker.Ticker(spawnPerSecond, function (delta) {
+    console.log(scene.getMeteors());
+
+    if (scene.getMeteors().length < maxAmount) {
+      console.log('spawn');
+      var meteorView = new _meteorView.MeteorView(0, 0, 50, '0xcc6600', pixiStage);
+      var position = random.getVectorSquare(0, scene.mapSize);
+      new _meteor.Meteor(meteorView.container, scene, position);
+    }
+  });
+};
+
+exports.MeteorSpawner = MeteorSpawner;
+
+},{"../engine/random":11,"../engine/ticker":12,"../ui/meteor-view":73,"./meteor":20,"./scene":22,"pixi.js":65}],20:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Meteor = void 0;
+
+var _vector = require("../utils/vector2");
+
+var _gameContext = require("./game-context");
+
+var _scene = require("./scene");
+
+var _transform = require("./transform");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Meteor = /*#__PURE__*/function () {
+  /** 
+   * @type {Transform}
+   * @public
+   */
+
+  /** 
+   * @type {Container}
+   * @public
+   */
+
+  /** 
+   * @type {Scene}
+   * @public
+   */
+
+  /** 
+  * @param {GameContext} context  
+  * @param {Container} view  
+  * @param {Scene} scene  
+  * @param {Vector2} position  
+  */
+  function Meteor(view, scene, position) {
+    _classCallCheck(this, Meteor);
+
+    _defineProperty(this, "transform", null);
+
+    _defineProperty(this, "view", null);
+
+    _defineProperty(this, "scene", null);
+
+    this.view = view;
+    this.scene = scene;
+    this.transform = new _transform.Transform(scene.mapSize);
+    this.scene.addMeteor(this);
+    this.transform.move(position);
+    this.render();
+  }
+
+  _createClass(Meteor, [{
+    key: "isActive",
+    value: function isActive() {
+      return this.view != null;
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      this.view.position.x = this.transform.position.x;
+      this.view.position.y = this.transform.position.y;
+    }
+  }, {
+    key: "delete",
+    value: function _delete() {
+      if (this.isActive()) {
+        this.view.destroy();
+        this.view = null;
+        this.scene.deleteMeteor(this);
+      }
+    }
+  }]);
+
+  return Meteor;
+}();
+
+exports.Meteor = Meteor;
+
+},{"../utils/vector2":77,"./game-context":18,"./scene":22,"./transform":23}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1955,6 +2494,12 @@ var _ticker = require("../engine/ticker");
 var _gameContext = require("./game-context");
 
 var _transform = require("./transform");
+
+var _scene = require("./scene");
+
+var _inputPlayer = require("../input/input-player");
+
+var _input = require("../input/input");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1976,9 +2521,15 @@ var Planet = /*#__PURE__*/function () {
    */
 
   /** 
-  * @param {GameContext} context  
+   * @type {Scene}
+   * @public
+   */
+
+  /** 
+  * @param {Input} input  
+  * @param {Scene} scene  
   */
-  function Planet(view, context) {
+  function Planet(view, input, scene, fps) {
     var _this = this;
 
     _classCallCheck(this, Planet);
@@ -1987,26 +2538,49 @@ var Planet = /*#__PURE__*/function () {
 
     _defineProperty(this, "view", null);
 
+    _defineProperty(this, "scene", null);
+
+    _defineProperty(this, "input", null);
+
     this.view = view;
-    this.transform = new _transform.Transform(context.settings.mapSize);
-    new _ticker.Ticker(context.settings.engineFps, function (delta) {
-      var direction = context.input.getInputDirection().flipY().multiValue(delta / 1);
+    this.scene = scene;
+    this.transform = new _transform.Transform(scene.mapSize);
+    new _ticker.Ticker(fps, function (delta) {
+      var direction = input.getInputDirection().flipY().multiValue(delta / 1);
 
       _this.transform.move(direction);
 
       _this.render();
-    });
-    context.app.ticker.add(function (delta) {//console.log(delta);
-      // тут можно интерполяцию замутить
-      //  this.render();
-    });
+    }); //context.app.ticker.add((delta) => {
+    // тут можно интерполяцию замутить
+    //  this.render();
+    //})
+
+    scene.addPlanet(this);
   }
 
   _createClass(Planet, [{
     key: "render",
     value: function render() {
       this.view.position.x = this.transform.position.x;
-      this.view.position.y = this.transform.position.y; // console.log(this.view.position)
+      this.view.position.y = this.transform.position.y;
+    }
+  }, {
+    key: "onCollideMeteor",
+    value: function onCollideMeteor(meteor) {
+      if (this.transform.isCollide(meteor.transform)) {
+        meteor["delete"]();
+      }
+    }
+  }, {
+    key: "onCollidePlanet",
+    value: function onCollidePlanet(planet) {}
+  }, {
+    key: "delete",
+    value: function _delete() {
+      this.view["delete"]();
+      this.view = null;
+      this.scene.deletePlanet(this);
     }
   }]);
 
@@ -2015,7 +2589,98 @@ var Planet = /*#__PURE__*/function () {
 
 exports.Planet = Planet;
 
-},{"../engine/ticker":10,"../ui/button-view":60,"./game-context":12,"./transform":15,"pixi.js":56}],15:[function(require,module,exports){
+},{"../engine/ticker":12,"../input/input":17,"../input/input-player":16,"../ui/button-view":70,"./game-context":18,"./scene":22,"./transform":23,"pixi.js":65}],22:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Scene = void 0;
+
+var _meteor = require("./meteor");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+// store current objects in scene
+// and store scene settings: size, static objects
+var Scene = /*#__PURE__*/function () {
+  /** 
+   * @type {Planet[]}
+   * @public
+   */
+
+  /** 
+  * @type {Meteor[]}
+  * @public
+  */
+
+  /** 
+   * @type {number}
+   * @public 
+   */
+  function Scene(mapSize, randomizer) {
+    _classCallCheck(this, Scene);
+
+    _defineProperty(this, "planets", []);
+
+    _defineProperty(this, "meteors", []);
+
+    _defineProperty(this, "mapSize", void 0);
+
+    this.mapSize = mapSize;
+  }
+
+  _createClass(Scene, [{
+    key: "getPlanets",
+    value: function getPlanets() {
+      return this.planets;
+    }
+  }, {
+    key: "getMeteors",
+    value: function getMeteors() {
+      return this.meteors;
+    }
+  }, {
+    key: "addPlanet",
+    value: function addPlanet(newPlanet) {
+      this.planets.push(newPlanet);
+    }
+  }, {
+    key: "addMeteor",
+    value: function addMeteor(newMeteor) {
+      this.meteors.push(newMeteor);
+    }
+  }, {
+    key: "deletePlanet",
+    value: function deletePlanet(planet) {
+      this.planets = this.planets.filter(function (p) {
+        return p != planet;
+      });
+    }
+  }, {
+    key: "deleteMeteor",
+    value: function deleteMeteor(meteor) {
+      this.meteors = this.meteors.filter(function (m) {
+        return m != meteor;
+      });
+    }
+  }, {
+    key: "getRandomPoint",
+    value: function getRandomPoint() {}
+  }]);
+
+  return Scene;
+}();
+
+exports.Scene = Scene;
+
+},{"./meteor":20}],23:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2053,7 +2718,14 @@ var Transform = /*#__PURE__*/function () {
     value: function move(vectorDelta) {
       var newPosition = this.position.add(vectorDelta);
       this.position = newPosition.trim(0 + this.size / 2, this.mapSize - this.size / 2);
-      console.log(this.position);
+    }
+  }, {
+    key: "isCollide",
+    value: function isCollide(otherTransform) {
+      var sphere = this.position;
+      var other = otherTransform.position;
+      var distance = Math.sqrt((sphere.x - other.x) * (sphere.x - other.x) + (sphere.y - other.y) * (sphere.y - other.y));
+      return distance < this.size / 2 + otherTransform.size / 2;
     }
   }]);
 
@@ -2062,7 +2734,7 @@ var Transform = /*#__PURE__*/function () {
 
 exports.Transform = Transform;
 
-},{"../utils/vector2":63}],16:[function(require,module,exports){
+},{"../utils/vector2":77}],24:[function(require,module,exports){
 /*!
  * @pixi/accessibility - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -2616,7 +3288,7 @@ exports.AccessibilityManager = AccessibilityManager;
 exports.accessibleTarget = accessibleTarget;
 
 
-},{"@pixi/display":21,"@pixi/utils":50}],17:[function(require,module,exports){
+},{"@pixi/display":29,"@pixi/utils":58}],25:[function(require,module,exports){
 /*!
  * @pixi/app - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -2891,7 +3563,7 @@ Application.registerPlugin(ResizePlugin);
 exports.Application = Application;
 
 
-},{"@pixi/core":20,"@pixi/display":21}],18:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/display":29}],26:[function(require,module,exports){
 /*!
  * @pixi/compressed-textures - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -4099,7 +4771,7 @@ exports.TYPES_TO_BYTES_PER_COMPONENT = TYPES_TO_BYTES_PER_COMPONENT;
 exports.TYPES_TO_BYTES_PER_PIXEL = TYPES_TO_BYTES_PER_PIXEL;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/loaders":31,"@pixi/utils":50}],19:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/loaders":39,"@pixi/utils":58}],27:[function(require,module,exports){
 /*!
  * @pixi/constants - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -4290,7 +4962,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 })(exports.BUFFER_TYPE || (exports.BUFFER_TYPE = {}));
 
 
-},{}],20:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * @pixi/core - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -16544,7 +17216,7 @@ exports.systems = systems;
 exports.uniformParsers = uniformParsers;
 
 
-},{"@pixi/constants":19,"@pixi/math":32,"@pixi/runner":41,"@pixi/settings":42,"@pixi/ticker":49,"@pixi/utils":50}],21:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/math":40,"@pixi/runner":49,"@pixi/settings":50,"@pixi/ticker":57,"@pixi/utils":58}],29:[function(require,module,exports){
 /*!
  * @pixi/display - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -18522,7 +19194,7 @@ exports.DisplayObject = DisplayObject;
 exports.TemporaryDisplayObject = TemporaryDisplayObject;
 
 
-},{"@pixi/math":32,"@pixi/settings":42,"@pixi/utils":50}],22:[function(require,module,exports){
+},{"@pixi/math":40,"@pixi/settings":50,"@pixi/utils":58}],30:[function(require,module,exports){
 /*!
  * @pixi/extract - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -18741,7 +19413,7 @@ var Extract = /** @class */ (function () {
 exports.Extract = Extract;
 
 
-},{"@pixi/core":20,"@pixi/math":32,"@pixi/utils":50}],23:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/math":40,"@pixi/utils":58}],31:[function(require,module,exports){
 /*!
  * @pixi/filter-alpha - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -18836,7 +19508,7 @@ var AlphaFilter = /** @class */ (function (_super) {
 exports.AlphaFilter = AlphaFilter;
 
 
-},{"@pixi/core":20}],24:[function(require,module,exports){
+},{"@pixi/core":28}],32:[function(require,module,exports){
 /*!
  * @pixi/filter-blur - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -19752,7 +20424,7 @@ exports.BlurFilter = BlurFilter;
 exports.BlurFilterPass = BlurFilterPass;
 
 
-},{"@pixi/core":20,"@pixi/settings":42}],25:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/settings":50}],33:[function(require,module,exports){
 /*!
  * @pixi/filter-color-matrix - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -20310,7 +20982,7 @@ ColorMatrixFilter.prototype.grayscale = ColorMatrixFilter.prototype.greyscale;
 exports.ColorMatrixFilter = ColorMatrixFilter;
 
 
-},{"@pixi/core":20}],26:[function(require,module,exports){
+},{"@pixi/core":28}],34:[function(require,module,exports){
 /*!
  * @pixi/filter-displacement - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -20451,7 +21123,7 @@ var DisplacementFilter = /** @class */ (function (_super) {
 exports.DisplacementFilter = DisplacementFilter;
 
 
-},{"@pixi/core":20,"@pixi/math":32}],27:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/math":40}],35:[function(require,module,exports){
 /*!
  * @pixi/filter-fxaa - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -20521,7 +21193,7 @@ var FXAAFilter = /** @class */ (function (_super) {
 exports.FXAAFilter = FXAAFilter;
 
 
-},{"@pixi/core":20}],28:[function(require,module,exports){
+},{"@pixi/core":28}],36:[function(require,module,exports){
 /*!
  * @pixi/filter-noise - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -20630,7 +21302,7 @@ var NoiseFilter = /** @class */ (function (_super) {
 exports.NoiseFilter = NoiseFilter;
 
 
-},{"@pixi/core":20}],29:[function(require,module,exports){
+},{"@pixi/core":28}],37:[function(require,module,exports){
 /*!
  * @pixi/graphics - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -23681,7 +24353,7 @@ exports.LineStyle = LineStyle;
 exports.graphicsUtils = graphicsUtils;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/display":21,"@pixi/math":32,"@pixi/utils":50}],30:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/display":29,"@pixi/math":40,"@pixi/utils":58}],38:[function(require,module,exports){
 /*!
  * @pixi/interaction - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -25936,7 +26608,7 @@ exports.InteractionTrackingData = InteractionTrackingData;
 exports.interactiveTarget = interactiveTarget;
 
 
-},{"@pixi/display":21,"@pixi/math":32,"@pixi/ticker":49,"@pixi/utils":50}],31:[function(require,module,exports){
+},{"@pixi/display":29,"@pixi/math":40,"@pixi/ticker":57,"@pixi/utils":58}],39:[function(require,module,exports){
 /*!
  * @pixi/loaders - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -27965,7 +28637,7 @@ exports.Loader = Loader;
 exports.TextureLoader = TextureLoader;
 
 
-},{"@pixi/core":20}],32:[function(require,module,exports){
+},{"@pixi/core":28}],40:[function(require,module,exports){
 /*!
  * @pixi/math - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -29852,7 +30524,7 @@ exports.Transform = Transform;
 exports.groupD8 = groupD8;
 
 
-},{}],33:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /*!
  * @pixi/mesh-extras - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -30605,7 +31277,7 @@ exports.SimplePlane = SimplePlane;
 exports.SimpleRope = SimpleRope;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/mesh":34}],34:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/mesh":42}],42:[function(require,module,exports){
 /*!
  * @pixi/mesh - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -31336,7 +32008,7 @@ exports.MeshGeometry = MeshGeometry;
 exports.MeshMaterial = MeshMaterial;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/display":21,"@pixi/math":32,"@pixi/settings":42,"@pixi/utils":50}],35:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/display":29,"@pixi/math":40,"@pixi/settings":50,"@pixi/utils":58}],43:[function(require,module,exports){
 /*!
  * @pixi/mixin-cache-as-bitmap - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -32248,7 +32920,7 @@ display.DisplayObject.prototype._cacheAsBitmapDestroy = function _cacheAsBitmapD
 exports.CacheData = CacheData;
 
 
-},{"@pixi/core":20,"@pixi/display":21,"@pixi/math":32,"@pixi/settings":42,"@pixi/sprite":45,"@pixi/utils":50}],36:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/display":29,"@pixi/math":40,"@pixi/settings":50,"@pixi/sprite":53,"@pixi/utils":58}],44:[function(require,module,exports){
 /*!
  * @pixi/mixin-get-child-by-name - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -32300,7 +32972,7 @@ display.Container.prototype.getChildByName = function getChildByName(name, deep)
 };
 
 
-},{"@pixi/display":21}],37:[function(require,module,exports){
+},{"@pixi/display":29}],45:[function(require,module,exports){
 /*!
  * @pixi/mixin-get-global-position - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -32338,7 +33010,7 @@ display.DisplayObject.prototype.getGlobalPosition = function getGlobalPosition(p
 };
 
 
-},{"@pixi/display":21,"@pixi/math":32}],38:[function(require,module,exports){
+},{"@pixi/display":29,"@pixi/math":40}],46:[function(require,module,exports){
 /*!
  * @pixi/particle-container - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -33155,7 +33827,7 @@ exports.ParticleContainer = ParticleContainer;
 exports.ParticleRenderer = ParticleRenderer;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/display":21,"@pixi/math":32,"@pixi/utils":50}],39:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/display":29,"@pixi/math":40,"@pixi/utils":58}],47:[function(require,module,exports){
 /*!
  * @pixi/polyfill - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -33274,7 +33946,7 @@ if (!self.Int32Array) {
 }
 
 
-},{"object-assign":55,"promise-polyfill":57}],40:[function(require,module,exports){
+},{"object-assign":64,"promise-polyfill":67}],48:[function(require,module,exports){
 /*!
  * @pixi/prepare - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -33917,7 +34589,7 @@ exports.Prepare = Prepare;
 exports.TimeLimiter = TimeLimiter;
 
 
-},{"@pixi/core":20,"@pixi/display":21,"@pixi/graphics":29,"@pixi/settings":42,"@pixi/text":48,"@pixi/ticker":49}],41:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/display":29,"@pixi/graphics":37,"@pixi/settings":50,"@pixi/text":56,"@pixi/ticker":57}],49:[function(require,module,exports){
 /*!
  * @pixi/runner - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -34121,7 +34793,7 @@ Object.defineProperties(Runner.prototype, {
 exports.Runner = Runner;
 
 
-},{}],42:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /*!
  * @pixi/settings - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -34936,7 +35608,7 @@ exports.isMobile = isMobile;
 exports.settings = settings;
 
 
-},{"ismobilejs":53}],43:[function(require,module,exports){
+},{"ismobilejs":62}],51:[function(require,module,exports){
 /*!
  * @pixi/sprite-animated - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -35413,7 +36085,7 @@ var AnimatedSprite = /** @class */ (function (_super) {
 exports.AnimatedSprite = AnimatedSprite;
 
 
-},{"@pixi/core":20,"@pixi/sprite":45,"@pixi/ticker":49}],44:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/sprite":53,"@pixi/ticker":57}],52:[function(require,module,exports){
 /*!
  * @pixi/sprite-tiling - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -35829,7 +36501,7 @@ exports.TilingSprite = TilingSprite;
 exports.TilingSpriteRenderer = TilingSpriteRenderer;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/math":32,"@pixi/sprite":45,"@pixi/utils":50}],45:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/math":40,"@pixi/sprite":53,"@pixi/utils":58}],53:[function(require,module,exports){
 /*!
  * @pixi/sprite - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -36424,7 +37096,7 @@ var Sprite = /** @class */ (function (_super) {
 exports.Sprite = Sprite;
 
 
-},{"@pixi/constants":19,"@pixi/core":20,"@pixi/display":21,"@pixi/math":32,"@pixi/settings":42,"@pixi/utils":50}],46:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/core":28,"@pixi/display":29,"@pixi/math":40,"@pixi/settings":50,"@pixi/utils":58}],54:[function(require,module,exports){
 /*!
  * @pixi/spritesheet - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -36824,7 +37496,7 @@ exports.Spritesheet = Spritesheet;
 exports.SpritesheetLoader = SpritesheetLoader;
 
 
-},{"@pixi/core":20,"@pixi/loaders":31,"@pixi/math":32,"@pixi/utils":50}],47:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/loaders":39,"@pixi/math":40,"@pixi/utils":58}],55:[function(require,module,exports){
 /*!
  * @pixi/text-bitmap - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -38610,7 +39282,7 @@ exports.BitmapFontLoader = BitmapFontLoader;
 exports.BitmapText = BitmapText;
 
 
-},{"@pixi/core":20,"@pixi/display":21,"@pixi/loaders":31,"@pixi/math":32,"@pixi/mesh":34,"@pixi/settings":42,"@pixi/text":48,"@pixi/utils":50}],48:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/display":29,"@pixi/loaders":39,"@pixi/math":40,"@pixi/mesh":42,"@pixi/settings":50,"@pixi/text":56,"@pixi/utils":58}],56:[function(require,module,exports){
 /*!
  * @pixi/text - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -40710,7 +41382,7 @@ exports.TextMetrics = TextMetrics;
 exports.TextStyle = TextStyle;
 
 
-},{"@pixi/core":20,"@pixi/math":32,"@pixi/settings":42,"@pixi/sprite":45,"@pixi/utils":50}],49:[function(require,module,exports){
+},{"@pixi/core":28,"@pixi/math":40,"@pixi/settings":50,"@pixi/sprite":53,"@pixi/utils":58}],57:[function(require,module,exports){
 /*!
  * @pixi/ticker - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -41463,7 +42135,7 @@ exports.Ticker = Ticker;
 exports.TickerPlugin = TickerPlugin;
 
 
-},{"@pixi/settings":42}],50:[function(require,module,exports){
+},{"@pixi/settings":50}],58:[function(require,module,exports){
 /*!
  * @pixi/utils - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -42701,7 +43373,191 @@ exports.uid = uid;
 exports.url = url;
 
 
-},{"@pixi/constants":19,"@pixi/settings":42,"earcut":51,"eventemitter3":52,"url":7}],51:[function(require,module,exports){
+},{"@pixi/constants":27,"@pixi/settings":50,"earcut":60,"eventemitter3":61,"url":7}],59:[function(require,module,exports){
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Prando = factory());
+}(this, (function () { 'use strict';
+
+    var Prando = /** @class */ (function () {
+        // ================================================================================================================
+        // CONSTRUCTOR ----------------------------------------------------------------------------------------------------
+        /**
+         * Generate a new Prando pseudo-random number generator.
+         *
+         * @param seed - A number or string seed that determines which pseudo-random number sequence will be created. Defaults to a random seed based on `Math.random()`.
+         */
+        function Prando(seed) {
+            this._value = NaN;
+            if (typeof seed === "string") {
+                // String seed
+                this._seed = this.hashCode(seed);
+            }
+            else if (typeof seed === "number") {
+                // Numeric seed
+                this._seed = this.getSafeSeed(seed);
+            }
+            else {
+                // Pseudo-random seed
+                this._seed = this.getSafeSeed(Prando.MIN + Math.floor((Prando.MAX - Prando.MIN) * Math.random()));
+            }
+            this.reset();
+        }
+        // ================================================================================================================
+        // PUBLIC INTERFACE -----------------------------------------------------------------------------------------------
+        /**
+         * Generates a pseudo-random number between a lower (inclusive) and a higher (exclusive) bounds.
+         *
+         * @param min - The minimum number that can be randomly generated.
+         * @param pseudoMax - The maximum number that can be randomly generated (exclusive).
+         * @return The generated pseudo-random number.
+         */
+        Prando.prototype.next = function (min, pseudoMax) {
+            if (min === void 0) { min = 0; }
+            if (pseudoMax === void 0) { pseudoMax = 1; }
+            this.recalculate();
+            return this.map(this._value, Prando.MIN, Prando.MAX, min, pseudoMax);
+        };
+        /**
+         * Generates a pseudo-random integer number in a range (inclusive).
+         *
+         * @param min - The minimum number that can be randomly generated.
+         * @param max - The maximum number that can be randomly generated.
+         * @return The generated pseudo-random number.
+         */
+        Prando.prototype.nextInt = function (min, max) {
+            if (min === void 0) { min = 10; }
+            if (max === void 0) { max = 100; }
+            this.recalculate();
+            return Math.floor(this.map(this._value, Prando.MIN, Prando.MAX, min, max + 1));
+        };
+        /**
+         * Generates a pseudo-random string sequence of a particular length from a specific character range.
+         *
+         * Note: keep in mind that creating a random string sequence does not guarantee uniqueness; there is always a
+         * 1 in (char_length^string_length) chance of collision. For real unique string ids, always check for
+         * pre-existing ids, or employ a robust GUID/UUID generator.
+         *
+         * @param length - Length of the string to be generated.
+         * @param chars - Characters that are used when creating the random string. Defaults to all alphanumeric chars (A-Z, a-z, 0-9).
+         * @return The generated string sequence.
+         */
+        Prando.prototype.nextString = function (length, chars) {
+            if (length === void 0) { length = 16; }
+            if (chars === void 0) { chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; }
+            var str = "";
+            while (str.length < length) {
+                str += this.nextChar(chars);
+            }
+            return str;
+        };
+        /**
+         * Generates a pseudo-random string of 1 character specific character range.
+         *
+         * @param chars - Characters that are used when creating the random string. Defaults to all alphanumeric chars (A-Z, a-z, 0-9).
+         * @return The generated character.
+         */
+        Prando.prototype.nextChar = function (chars) {
+            if (chars === void 0) { chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; }
+            return chars.substr(this.nextInt(0, chars.length - 1), 1);
+        };
+        /**
+         * Picks a pseudo-random item from an array. The array is left unmodified.
+         *
+         * Note: keep in mind that while the returned item will be random enough, picking one item from the array at a time
+         * does not guarantee nor imply that a sequence of random non-repeating items will be picked. If you want to
+         * *pick items in a random order* from an array, instead of *pick one random item from an array*, it's best to
+         * apply a *shuffle* transformation to the array instead, then read it linearly.
+         *
+         * @param array - Array of any type containing one or more candidates for random picking.
+         * @return An item from the array.
+         */
+        Prando.prototype.nextArrayItem = function (array) {
+            return array[this.nextInt(0, array.length - 1)];
+        };
+        /**
+         * Generates a pseudo-random boolean.
+         *
+         * @return A value of true or false.
+         */
+        Prando.prototype.nextBoolean = function () {
+            this.recalculate();
+            return this._value > 0.5;
+        };
+        /**
+         * Skips ahead in the sequence of numbers that are being generated. This is equivalent to
+         * calling next() a specified number of times, but faster since it doesn't need to map the
+         * new random numbers to a range and return it.
+         *
+         * @param iterations - The number of items to skip ahead.
+         */
+        Prando.prototype.skip = function (iterations) {
+            if (iterations === void 0) { iterations = 1; }
+            while (iterations-- > 0) {
+                this.recalculate();
+            }
+        };
+        /**
+         * Reset the pseudo-random number sequence back to its starting seed. Further calls to next()
+         * will then produce the same sequence of numbers it had produced before. This is equivalent to
+         * creating a new Prando instance with the same seed as another Prando instance.
+         *
+         * Example:
+         * let rng = new Prando(12345678);
+         * console.log(rng.next()); // 0.6177754114889017
+         * console.log(rng.next()); // 0.5784605181725837
+         * rng.reset();
+         * console.log(rng.next()); // 0.6177754114889017 again
+         * console.log(rng.next()); // 0.5784605181725837 again
+         */
+        Prando.prototype.reset = function () {
+            this._value = this._seed;
+        };
+        // ================================================================================================================
+        // PRIVATE INTERFACE ----------------------------------------------------------------------------------------------
+        Prando.prototype.recalculate = function () {
+            this._value = this.xorshift(this._value);
+        };
+        Prando.prototype.xorshift = function (value) {
+            // Xorshift*32
+            // Based on George Marsaglia's work: http://www.jstatsoft.org/v08/i14/paper
+            value ^= value << 13;
+            value ^= value >> 17;
+            value ^= value << 5;
+            return value;
+        };
+        Prando.prototype.map = function (val, minFrom, maxFrom, minTo, maxTo) {
+            return ((val - minFrom) / (maxFrom - minFrom)) * (maxTo - minTo) + minTo;
+        };
+        Prando.prototype.hashCode = function (str) {
+            var hash = 0;
+            if (str) {
+                var l = str.length;
+                for (var i = 0; i < l; i++) {
+                    hash = (hash << 5) - hash + str.charCodeAt(i);
+                    hash |= 0;
+                    hash = this.xorshift(hash);
+                }
+            }
+            return this.getSafeSeed(hash);
+        };
+        Prando.prototype.getSafeSeed = function (seed) {
+            if (seed === 0)
+                return 1;
+            return seed;
+        };
+        Prando.MIN = -2147483648; // Int32 min
+        Prando.MAX = 2147483647; // Int32 max
+        return Prando;
+    }());
+
+    return Prando;
+
+})));
+module.exports.default = module.exports; // Terrible injection just so it works regardless of how it's required
+
+},{}],60:[function(require,module,exports){
 'use strict';
 
 module.exports = earcut;
@@ -43387,7 +44243,7 @@ earcut.flatten = function (data) {
     return result;
 };
 
-},{}],52:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty
@@ -43725,7 +44581,7 @@ if ('undefined' !== typeof module) {
   module.exports = EventEmitter;
 }
 
-},{}],53:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -43735,7 +44591,7 @@ __export(require("./isMobile"));
 var isMobile_1 = require("./isMobile");
 exports["default"] = isMobile_1["default"];
 
-},{"./isMobile":54}],54:[function(require,module,exports){
+},{"./isMobile":63}],63:[function(require,module,exports){
 "use strict";
 exports.__esModule = true;
 var appleIphone = /iPhone/i;
@@ -43864,7 +44720,7 @@ function isMobile(param) {
 }
 exports["default"] = isMobile;
 
-},{}],55:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -43956,7 +44812,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],56:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 /*!
  * pixi.js - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -44268,7 +45124,9 @@ exports.VERSION = VERSION;
 exports.filters = filters;
 
 
-},{"@pixi/accessibility":16,"@pixi/app":17,"@pixi/compressed-textures":18,"@pixi/constants":19,"@pixi/core":20,"@pixi/display":21,"@pixi/extract":22,"@pixi/filter-alpha":23,"@pixi/filter-blur":24,"@pixi/filter-color-matrix":25,"@pixi/filter-displacement":26,"@pixi/filter-fxaa":27,"@pixi/filter-noise":28,"@pixi/graphics":29,"@pixi/interaction":30,"@pixi/loaders":31,"@pixi/math":32,"@pixi/mesh":34,"@pixi/mesh-extras":33,"@pixi/mixin-cache-as-bitmap":35,"@pixi/mixin-get-child-by-name":36,"@pixi/mixin-get-global-position":37,"@pixi/particle-container":38,"@pixi/polyfill":39,"@pixi/prepare":40,"@pixi/runner":41,"@pixi/settings":42,"@pixi/sprite":45,"@pixi/sprite-animated":43,"@pixi/sprite-tiling":44,"@pixi/spritesheet":46,"@pixi/text":48,"@pixi/text-bitmap":47,"@pixi/ticker":49,"@pixi/utils":50}],57:[function(require,module,exports){
+},{"@pixi/accessibility":24,"@pixi/app":25,"@pixi/compressed-textures":26,"@pixi/constants":27,"@pixi/core":28,"@pixi/display":29,"@pixi/extract":30,"@pixi/filter-alpha":31,"@pixi/filter-blur":32,"@pixi/filter-color-matrix":33,"@pixi/filter-displacement":34,"@pixi/filter-fxaa":35,"@pixi/filter-noise":36,"@pixi/graphics":37,"@pixi/interaction":38,"@pixi/loaders":39,"@pixi/math":40,"@pixi/mesh":42,"@pixi/mesh-extras":41,"@pixi/mixin-cache-as-bitmap":43,"@pixi/mixin-get-child-by-name":44,"@pixi/mixin-get-global-position":45,"@pixi/particle-container":46,"@pixi/polyfill":47,"@pixi/prepare":48,"@pixi/runner":49,"@pixi/settings":50,"@pixi/sprite":53,"@pixi/sprite-animated":51,"@pixi/sprite-tiling":52,"@pixi/spritesheet":54,"@pixi/text":56,"@pixi/text-bitmap":55,"@pixi/ticker":57,"@pixi/utils":58}],66:[function(require,module,exports){
+arguments[4][59][0].apply(exports,arguments)
+},{"dup":59}],67:[function(require,module,exports){
 (function (setImmediate){(function (){
 'use strict';
 
@@ -44596,7 +45454,7 @@ Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
 module.exports = Promise;
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"timers":6}],58:[function(require,module,exports){
+},{"timers":6}],68:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -44615,6 +45473,22 @@ var _gameContext = require("../models/game-context");
 var _planet = require("../models/planet");
 
 var M = _interopRequireWildcard(require("../utils/math"));
+
+var _planetView = require("../ui/planet-view");
+
+var _meteorView = require("../ui/meteor-view");
+
+var _meteor = require("../models/meteor");
+
+var _centerCoordinatesView = require("../ui/center-coordinates-view");
+
+var _collisionEngine = require("../engine/collision-engine");
+
+var _scene = require("../models/scene");
+
+var _meteorSpawner = require("../models/meteor-spawner");
+
+var _bot = require("../input/bot");
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -44646,11 +45520,28 @@ function GameplayService(context) {
     }
   }
 
-  var planet = new _planet.Planet(new _buttonView.Button(0, 0, 100, 100, 'OOO', '0x2c3e50', app.stage, function () {}).container, context); //camera
+  var scene = new _scene.Scene(context.settings.mapSize);
+  var planetView = new _planetView.PlanetView(0, 0, 100, 'player', '0x6699ff', app.stage);
+  var planet = new _planet.Planet(planetView.container, context.input, scene, context.settings.engineFps);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  var collision = new _collisionEngine.CollisionEngine(scene, context.settings.engineFps);
+  var meteorSpawner = new _meteorSpawner.MeteorSpawner(context.random, scene, app.stage, 100, 5);
+  new _centerCoordinatesView.CenterCoordinatesView(0, 0, app.stage);
+  new _centerCoordinatesView.CenterCoordinatesView(100, null, app.stage);
+  new _centerCoordinatesView.CenterCoordinatesView(null, 100, app.stage); //camera
 
   app.ticker.add(function (delta) {
     var pos = planet.transform.position;
     app.stage.pivot.set(pos.x - app.renderer.width / 2, pos.y - app.renderer.width / 2);
+    app.stage.scale.set(0.5);
   });
 } //render(planet){
 //    this.app.stage.addChild(planet)
@@ -44667,7 +45558,7 @@ stage.pivot.set(myCharacter.x, myCharacter.y); //now character inside stage is m
 
 exports.GameplayService = GameplayService;
 
-},{"../models/game-context":12,"../models/planet":14,"../ui/button-view":60,"../utils/math":62,"pixi.js":56}],59:[function(require,module,exports){
+},{"../engine/collision-engine":10,"../input/bot":14,"../models/game-context":18,"../models/meteor":20,"../models/meteor-spawner":19,"../models/planet":21,"../models/scene":22,"../ui/button-view":70,"../ui/center-coordinates-view":71,"../ui/meteor-view":73,"../ui/planet-view":74,"../utils/math":75,"pixi.js":65}],69:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44702,7 +45593,7 @@ function MenuService(context) {
 
 exports.MenuService = MenuService;
 
-},{"../models/game-context":12,"../ui/menu-view":61,"./gameplay-service":58,"pixi.js":56}],60:[function(require,module,exports){
+},{"../models/game-context":18,"../ui/menu-view":72,"./gameplay-service":68,"pixi.js":65}],70:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44778,7 +45669,92 @@ function Button(x, y, width, height, text) {
 
 exports.Button = Button;
 
-},{"pixi.js":56}],61:[function(require,module,exports){
+},{"pixi.js":65}],71:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CenterCoordinatesView = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _require = require('pixi.js'),
+    Container = _require.Container;
+/**
+ * @param {number} radius
+ * @param {number} height
+ * @param {string} text
+ * @param {Container} parent
+ */
+
+
+var CenterCoordinatesView =
+/** 
+ * @type {Container}
+ * @public
+ */
+
+/** 
+* @param {number} x
+* @param {number} y  
+* @param {number} diameter 
+* @param {string} text 
+* @param {string} backgroundColor 
+* @param {Container} parent 
+*/
+function CenterCoordinatesView(x, y, parent) {
+  _classCallCheck(this, CenterCoordinatesView);
+
+  _defineProperty(this, "container", null);
+
+  var color = '0xffffff';
+
+  var PIXI = require('pixi.js');
+
+  var lineVertical = new PIXI.Graphics();
+  var lineHorizontal = new PIXI.Graphics();
+  var container = new PIXI.Container();
+  var textStyle = new PIXI.TextStyle({
+    fill: 'white' //align : 'center'
+
+  });
+  lineVertical.beginFill(color).lineStyle(1, color, 1);
+  lineVertical.drawRect(0, 0, -100, 1);
+  lineVertical.endFill();
+  lineHorizontal.beginFill(color).lineStyle(1, color, 1);
+  lineHorizontal.drawRect(0, 0, 1, -100);
+  lineHorizontal.endFill();
+
+  if (y != null) {
+    var textY = new PIXI.Text(y, textStyle);
+    textY.position.x = -105;
+    textY.resolution = 4;
+    container.addChild(textY);
+  }
+
+  if (x != null) {
+    var textX = new PIXI.Text(x, textStyle);
+    textX.position.y = -110;
+    textX.position.x = 5;
+    textX.resolution = 4;
+    container.addChild(textX);
+  }
+
+  container.addChild(lineVertical);
+  container.addChild(lineHorizontal);
+  parent.addChild(container);
+  container.x = x == null ? 0 : x;
+  container.y = y == null ? 0 : y;
+  this.container = container;
+  return this;
+};
+
+exports.CenterCoordinatesView = CenterCoordinatesView;
+
+},{"pixi.js":65}],72:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44838,7 +45814,173 @@ var MenuView = /*#__PURE__*/function () {
 
 exports.MenuView = MenuView;
 
-},{"../models/game-context":12,"./button-view":60,"pixi.js":56}],62:[function(require,module,exports){
+},{"../models/game-context":18,"./button-view":70,"pixi.js":65}],73:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MeteorView = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _require = require('pixi.js'),
+    Container = _require.Container;
+
+var MeteorView =
+/** 
+ * @type {Container}
+ * @public
+ */
+
+/** 
+* @param {number} x
+* @param {number} y  
+* @param {number} diameter 
+* @param {string} text 
+* @param {string} backgroundColor 
+* @param {Container} parent 
+*/
+function MeteorView(x, y, diameter) {
+  var backgroundColor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '0xcc6600';
+  var parent = arguments.length > 4 ? arguments[4] : undefined;
+
+  _classCallCheck(this, MeteorView);
+
+  _defineProperty(this, "container", null);
+
+  var radius = diameter / 2;
+
+  var PIXI = require('pixi.js');
+
+  var mainCircle = new PIXI.Graphics();
+  var container = new PIXI.Container();
+  var textStyle = new PIXI.TextStyle({
+    fill: 'white' //align : 'center'
+
+  });
+
+  function createCrater(radius) {
+    var crater = new PIXI.Graphics();
+    crater.beginFill('0x663300').lineStyle(2, '0x331a00', 1);
+    crater.drawCircle(0, 0, radius);
+    crater.endFill();
+    return crater;
+  }
+
+  mainCircle.beginFill(backgroundColor).lineStyle(5, 'red', 1);
+  mainCircle.drawEllipse(0, 0, diameter, diameter / 1.333);
+  mainCircle.angle = -33;
+  mainCircle.endFill(); //mainCircle.pivot.set(radius, radius);
+
+  var crater = createCrater(radius / 2);
+  crater.pivot.set(radius / 2, radius / 3);
+  var crater2 = createCrater(radius / 3);
+  crater2.pivot.set(-radius / 2, -radius / 3);
+  var crater3 = createCrater(radius / 4);
+  crater3.pivot.set(-diameter / 1.5, radius / 4);
+  container.addChild(mainCircle);
+  container.addChild(crater);
+  container.addChild(crater2);
+  container.addChild(crater3);
+  parent.addChild(container);
+  container.x = x;
+  container.y = y;
+  this.container = container;
+
+  this["delete"] = function () {
+    parent.removeChild(container);
+  };
+
+  return this;
+};
+
+exports.MeteorView = MeteorView;
+
+},{"pixi.js":65}],74:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PlanetView = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _require = require('pixi.js'),
+    Container = _require.Container; // maybe will help with blurry text
+//PIXI.settings.PRECISION_FRAGMENT = 'highp'; //this makes text looks better
+//this.renderer = PIXI.autoDetectRenderer(845, 451, { antialias: false, transparent: true });      
+//this.renderer.roundPixels = true; //and this too
+
+/**
+ * @param {number} radius
+ * @param {number} height
+ * @param {string} text
+ * @param {Container} parent
+ */
+
+
+var PlanetView =
+/** 
+ * @type {Container}
+ * @public
+ */
+
+/** 
+* @param {number} x
+* @param {number} y  
+* @param {number} diameter 
+* @param {string} text 
+* @param {string} backgroundColor 
+* @param {Container} parent 
+*/
+function PlanetView(x, y, diameter, text) {
+  var backgroundColor = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '0x6699ff';
+  var parent = arguments.length > 5 ? arguments[5] : undefined;
+
+  _classCallCheck(this, PlanetView);
+
+  _defineProperty(this, "container", null);
+
+  var radius = diameter / 2;
+
+  var PIXI = require('pixi.js');
+
+  var circle = new PIXI.Graphics();
+  var container = new PIXI.Container();
+  var textStyle = new PIXI.TextStyle({
+    fill: 'white' //align : 'center'
+
+  });
+  circle.beginFill(backgroundColor).lineStyle(5, 'red', 1);
+  circle.drawCircle(0, 0, radius);
+  circle.endFill(); //circle.pivot.set(radius, radius);
+
+  var textObject = new PIXI.Text(text, textStyle);
+  textObject.anchor.set(0.5);
+  textObject.resolution = 4;
+  container.addChild(circle);
+  container.addChild(textObject);
+  parent.addChild(container);
+  container.x = x;
+  container.y = y;
+  this.container = container;
+
+  this["delete"] = function () {
+    parent.removeChild(container);
+  };
+
+  return this;
+};
+
+exports.PlanetView = PlanetView;
+
+},{"pixi.js":65}],75:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44887,7 +46029,57 @@ function isEqual(a, b) {
   return abs(a - b) < epsilon;
 }
 
-},{}],63:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Timer = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Timer = /*#__PURE__*/function () {
+  function Timer(timeout) {
+    _classCallCheck(this, Timer);
+
+    _defineProperty(this, "timeout", void 0);
+
+    _defineProperty(this, "currentTime", void 0);
+
+    this.timeout = timeout;
+    this.currentTime = timeout;
+  }
+
+  _createClass(Timer, [{
+    key: "update",
+    value: function update(delta) {
+      this.currentTime = this.currentTime - delta;
+    }
+  }, {
+    key: "isFinished",
+    value: function isFinished() {
+      return this.currentTime < 0;
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      this.currentTime = this.timeout;
+    }
+  }]);
+
+  return Timer;
+}();
+
+exports.Timer = Timer;
+
+},{}],77:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -44970,4 +46162,4 @@ var Vector2 = /*#__PURE__*/function () {
 
 exports.Vector2 = Vector2;
 
-},{"../utils/math":62}]},{},[9]);
+},{"../utils/math":75}]},{},[9]);

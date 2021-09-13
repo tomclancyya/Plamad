@@ -1,8 +1,7 @@
-const { Input } = require('./models/input.js');
+const { InputPlayer } = require('./input/input-player.js');
 
 
-
-let input = new Input()
+let input = new InputPlayer()
 document.addEventListener('keydown', function(event) {
     if (event.code == 'ArrowUp') {
         input.isUp = true;

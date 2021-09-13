@@ -11,6 +11,12 @@ run tests:
 node --experimental-specifier-resolution=node ./test/app-test.js
 
 
+check docs
+https://www.npmjs.com/package/eslint-plugin-jsdoc
+
+
+
+
 Terminal colors:
 
 Reset = "\x1b[0m"
