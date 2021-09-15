@@ -10,7 +10,7 @@ export class TestEngine{
                 try {
                 let testResult = testCase[1]()
                 console.log(testResult.color, '    ' + testResult.result, '\x1b[0m');
-                } catch (testFailResult) {
+                } catch (testFailResult) {                    
                     console.log(testFailResult.color, '    ' + testFailResult.result,'\x1b[0m');
                     console.log(testFailResult.color, '    ' + testFailResult.message,'\x1b[0m');
                 }

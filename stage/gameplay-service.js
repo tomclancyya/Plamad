@@ -11,6 +11,8 @@ import { CollisionEngine } from '../engine/collision-engine';
 import { Scene } from '../models/scene';
 import { MeteorSpawner } from '../models/meteor-spawner';
 import { Bot } from '../input/bot';
+import { EventManager } from '../utils/event-manager';
+import { Ticker } from '../engine/ticker';
 
 export class GameplayService {
   
@@ -36,20 +38,16 @@ export class GameplayService {
             }
         }
 
+        let eventTick = new EventManager()
+
         let scene = new Scene(context.settings.mapSize);
 
         let planetView = new PlanetView(0, 0, 100, 'player', '0x6699ff', app.stage);
-        let planet = new Planet(planetView.container, context.input, scene, context.settings.engineFps);
+        let planet = new Planet(planetView.container, context.input, scene, context.settings.engineFps, eventTick);
 
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
-        new Bot(app.stage, scene, context.settings.engineFps, context.random)
+        for (let i = 0; i < 10; i++){
+            new Bot(app.stage, scene, context.settings.engineFps, context.random, eventTick)
+        }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
         let meteorSpawner = new MeteorSpawner(context.random, scene, app.stage, 100, 5)
@@ -57,6 +55,10 @@ export class GameplayService {
         new CenterCoordinatesView(0, 0, app.stage)
         new CenterCoordinatesView(100, null, app.stage)
         new CenterCoordinatesView(null, 100, app.stage)
+
+        new Ticker(context.settings.engineFps, (delta) => {
+            eventTick.call(delta)
+        })
         
 
         //camera

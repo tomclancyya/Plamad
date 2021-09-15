@@ -1941,7 +1941,7 @@ var Random = /*#__PURE__*/function () {
 
 exports.Random = Random;
 
-},{"../utils/vector2":77,"Prando":59}],12:[function(require,module,exports){
+},{"../utils/vector2":78,"Prando":59}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2021,30 +2021,42 @@ var _input = require("./input");
 
 var _inputBot = require("./input-bot");
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var Bot = /*#__PURE__*/function () {
+  /**
+   * @type {Input}
+   */
+  //input = new InputBot()
+  function Bot(pixiStage, scene, fps, random, ticker) {
+    _classCallCheck(this, Bot);
 
-var Bot =
-/**
- * @type {Input}
- */
-//input = new InputBot()
-function Bot(pixiStage, scene, fps, random) {
-  _classCallCheck(this, Bot);
+    _defineProperty(this, "currentState", null);
 
-  var input = new _inputBot.InputBot();
-  var planetView = new _planetView.PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
-  var planet = new _planet.Planet(planetView.container, input, scene, fps);
-  var move = new MovingState(planet, scene, input, random);
-  new _ticker.Ticker(fps, function (delta) {
-    move.update(delta);
-  });
-};
+    var input = new _inputBot.InputBot();
+    var planetView = new _planetView.PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
+    var planet = new _planet.Planet(planetView.container, input, scene, fps, ticker);
+    this.currentState = new MovingState(planet, scene, input, random);
+    this.ticker = ticker;
+    ticker.subscribe(this.tick);
+  }
+
+  _createClass(Bot, [{
+    key: "tick",
+    value: function tick(delta) {
+      this.currentState.update(delta);
+    } //TODO: unsubscribe tick
+
+  }]);
+
+  return Bot;
+}();
 
 exports.Bot = Bot;
 
@@ -2081,7 +2093,7 @@ var MovingState = /*#__PURE__*/function () {
   return MovingState;
 }();
 
-},{"../engine/ticker":12,"../models/planet":21,"../ui/planet-view":74,"../utils/timer":76,"../utils/vector2":77,"./input":17,"./input-bot":15}],15:[function(require,module,exports){
+},{"../engine/ticker":12,"../models/planet":21,"../ui/planet-view":74,"../utils/timer":77,"../utils/vector2":78,"./input":17,"./input-bot":15}],15:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -2151,7 +2163,7 @@ var InputBot = /*#__PURE__*/function (_Input) {
 
 exports.InputBot = InputBot;
 
-},{"../utils/vector2":77,"./input":17}],16:[function(require,module,exports){
+},{"../utils/vector2":78,"./input":17}],16:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -2246,7 +2258,7 @@ var InputPlayer = /*#__PURE__*/function (_Input) {
 
 exports.InputPlayer = InputPlayer;
 
-},{"../utils/vector2":77,"./input":17}],17:[function(require,module,exports){
+},{"../utils/vector2":78,"./input":17}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2282,7 +2294,7 @@ var Input = /*#__PURE__*/function () {
 
 exports.Input = Input;
 
-},{"../utils/vector2":77}],18:[function(require,module,exports){
+},{"../utils/vector2":78}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2464,6 +2476,9 @@ var Meteor = /*#__PURE__*/function () {
   }, {
     key: "delete",
     value: function _delete() {
+      //ебанный костыль. проблема в том, что если удалить объект здесь, то в списке коллайд движка он все еще существует. 
+      // пока коллайд движок не пройдется по всем элементам.
+      //поэтому добавил isActive чтобы проверять не удалился ли объект
       if (this.isActive()) {
         this.view.destroy();
         this.view = null;
@@ -2477,7 +2492,7 @@ var Meteor = /*#__PURE__*/function () {
 
 exports.Meteor = Meteor;
 
-},{"../utils/vector2":77,"./game-context":18,"./scene":22,"./transform":23}],21:[function(require,module,exports){
+},{"../utils/vector2":78,"./game-context":18,"./scene":22,"./transform":23}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2500,6 +2515,8 @@ var _scene = require("./scene");
 var _inputPlayer = require("../input/input-player");
 
 var _input = require("../input/input");
+
+var _eventManager = require("../utils/event-manager");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2526,12 +2543,16 @@ var Planet = /*#__PURE__*/function () {
    */
 
   /** 
+   * @type {EventManager}
+   * @public
+   */
+
+  /** 
   * @param {Input} input  
   * @param {Scene} scene  
+  * @param {EventManager} ticker
   */
-  function Planet(view, input, scene, fps) {
-    var _this = this;
-
+  function Planet(view, input, scene, fps, ticker) {
     _classCallCheck(this, Planet);
 
     _defineProperty(this, "transform", null);
@@ -2542,24 +2563,26 @@ var Planet = /*#__PURE__*/function () {
 
     _defineProperty(this, "input", null);
 
+    _defineProperty(this, "ticker", null);
+
+    this.ticker = ticker;
+    this.input = input;
     this.view = view;
     this.scene = scene;
     this.transform = new _transform.Transform(scene.mapSize);
-    new _ticker.Ticker(fps, function (delta) {
-      var direction = input.getInputDirection().flipY().multiValue(delta / 1);
-
-      _this.transform.move(direction);
-
-      _this.render();
-    }); //context.app.ticker.add((delta) => {
-    // тут можно интерполяцию замутить
-    //  this.render();
-    //})
-
+    ticker.subscribe(this.tick);
     scene.addPlanet(this);
   }
 
   _createClass(Planet, [{
+    key: "tick",
+    value: function tick(delta) {
+      console.log(this);
+      var direction = this.input.getInputDirection().flipY().multiValue(delta / 1);
+      this.transform.move(direction);
+      this.render();
+    }
+  }, {
     key: "render",
     value: function render() {
       this.view.position.x = this.transform.position.x;
@@ -2576,8 +2599,14 @@ var Planet = /*#__PURE__*/function () {
     key: "onCollidePlanet",
     value: function onCollidePlanet(planet) {}
   }, {
+    key: "isActive",
+    value: function isActive() {
+      return this.view != null;
+    }
+  }, {
     key: "delete",
     value: function _delete() {
+      this.ticker.unsubscribe(this.tick);
       this.view["delete"]();
       this.view = null;
       this.scene.deletePlanet(this);
@@ -2589,7 +2618,7 @@ var Planet = /*#__PURE__*/function () {
 
 exports.Planet = Planet;
 
-},{"../engine/ticker":12,"../input/input":17,"../input/input-player":16,"../ui/button-view":70,"./game-context":18,"./scene":22,"./transform":23,"pixi.js":65}],22:[function(require,module,exports){
+},{"../engine/ticker":12,"../input/input":17,"../input/input-player":16,"../ui/button-view":70,"../utils/event-manager":75,"./game-context":18,"./scene":22,"./transform":23,"pixi.js":65}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2734,7 +2763,7 @@ var Transform = /*#__PURE__*/function () {
 
 exports.Transform = Transform;
 
-},{"../utils/vector2":77}],24:[function(require,module,exports){
+},{"../utils/vector2":78}],24:[function(require,module,exports){
 /*!
  * @pixi/accessibility - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -45490,6 +45519,10 @@ var _meteorSpawner = require("../models/meteor-spawner");
 
 var _bot = require("../input/bot");
 
+var _eventManager = require("../utils/event-manager");
+
+var _ticker = require("../engine/ticker");
+
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
@@ -45520,23 +45553,23 @@ function GameplayService(context) {
     }
   }
 
+  var eventTick = new _eventManager.EventManager();
   var scene = new _scene.Scene(context.settings.mapSize);
   var planetView = new _planetView.PlanetView(0, 0, 100, 'player', '0x6699ff', app.stage);
-  var planet = new _planet.Planet(planetView.container, context.input, scene, context.settings.engineFps);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
-  new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random);
+  var planet = new _planet.Planet(planetView.container, context.input, scene, context.settings.engineFps, eventTick);
+
+  for (var _i = 0; _i < 10; _i++) {
+    new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random, eventTick);
+  }
+
   var collision = new _collisionEngine.CollisionEngine(scene, context.settings.engineFps);
   var meteorSpawner = new _meteorSpawner.MeteorSpawner(context.random, scene, app.stage, 100, 5);
   new _centerCoordinatesView.CenterCoordinatesView(0, 0, app.stage);
   new _centerCoordinatesView.CenterCoordinatesView(100, null, app.stage);
-  new _centerCoordinatesView.CenterCoordinatesView(null, 100, app.stage); //camera
+  new _centerCoordinatesView.CenterCoordinatesView(null, 100, app.stage);
+  new _ticker.Ticker(context.settings.engineFps, function (delta) {
+    eventTick.call(delta);
+  }); //camera
 
   app.ticker.add(function (delta) {
     var pos = planet.transform.position;
@@ -45558,7 +45591,7 @@ stage.pivot.set(myCharacter.x, myCharacter.y); //now character inside stage is m
 
 exports.GameplayService = GameplayService;
 
-},{"../engine/collision-engine":10,"../input/bot":14,"../models/game-context":18,"../models/meteor":20,"../models/meteor-spawner":19,"../models/planet":21,"../models/scene":22,"../ui/button-view":70,"../ui/center-coordinates-view":71,"../ui/meteor-view":73,"../ui/planet-view":74,"../utils/math":75,"pixi.js":65}],69:[function(require,module,exports){
+},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../models/game-context":18,"../models/meteor":20,"../models/meteor-spawner":19,"../models/planet":21,"../models/scene":22,"../ui/button-view":70,"../ui/center-coordinates-view":71,"../ui/meteor-view":73,"../ui/planet-view":74,"../utils/event-manager":75,"../utils/math":76,"pixi.js":65}],69:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -45986,6 +46019,56 @@ exports.PlanetView = PlanetView;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.EventManager = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var EventManager = /*#__PURE__*/function () {
+  // list of methods
+  function EventManager() {
+    _classCallCheck(this, EventManager);
+
+    _defineProperty(this, "subscribers", []);
+  }
+
+  _createClass(EventManager, [{
+    key: "subscribe",
+    value: function subscribe(callback) {
+      this.subscribers.push(callback);
+    }
+  }, {
+    key: "unsubscribe",
+    value: function unsubscribe(callback) {
+      this.subscribers = this.subscribers.filter(function (s) {
+        return s != callback;
+      });
+    }
+  }, {
+    key: "call",
+    value: function call(param) {
+      this.subscribers.map(function (s) {
+        return s(param);
+      });
+    }
+  }]);
+
+  return EventManager;
+}();
+
+exports.EventManager = EventManager;
+
+},{}],76:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.add = add;
 exports.sub = sub;
 exports.div = div;
@@ -46029,7 +46112,7 @@ function isEqual(a, b) {
   return abs(a - b) < epsilon;
 }
 
-},{}],76:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46079,7 +46162,7 @@ var Timer = /*#__PURE__*/function () {
 
 exports.Timer = Timer;
 
-},{}],77:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -46162,4 +46245,4 @@ var Vector2 = /*#__PURE__*/function () {
 
 exports.Vector2 = Vector2;
 
-},{"../utils/math":75}]},{},[9]);
+},{"../utils/math":76}]},{},[9]);

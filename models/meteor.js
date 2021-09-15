@@ -35,7 +35,6 @@ export class Meteor {
         this.scene.addMeteor(this)
         this.transform.move(position)
         this.render();
-        
     }
 
     isActive() {
@@ -51,6 +50,9 @@ export class Meteor {
 
 
     delete() {
+        //ебанный костыль. проблема в том, что если удалить объект здесь, то в списке коллайд движка он все еще существует. 
+        // пока коллайд движок не пройдется по всем элементам.
+        //поэтому добавил isActive чтобы проверять не удалился ли объект
         if (this.isActive()) {        
             this.view.destroy();
             this.view = null;

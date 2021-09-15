@@ -13,20 +13,27 @@ export class Bot {
      */
     //input = new InputBot()
 
-    constructor(pixiStage, scene, fps, random){
+    currentState = null;
+
+    constructor(pixiStage, scene, fps, random, ticker){
 
         let input = new InputBot()
 
         let planetView = new PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
-        let planet = new Planet(planetView.container, input, scene, fps);
+        let planet = new Planet(planetView.container, input, scene, fps, ticker);
 
-        let move = new MovingState(planet, scene, input, random)
- 
-        new Ticker(fps, (delta) => {
-            move.update(delta);
-        })
+        this.currentState = new MovingState(planet, scene, input, random)
+        this.ticker = ticker;
+
+        ticker.subscribe(this.tick)
 
     }
+
+    tick(delta){
+        this.currentState.update(delta);
+    }
+
+    //TODO: unsubscribe tick
 
 
 }

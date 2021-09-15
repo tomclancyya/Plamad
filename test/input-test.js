@@ -1,4 +1,4 @@
-import { Input } from "../models/input"
+import { InputPlayer } from "../input/input-player";
 import { Vector2 } from "../utils/vector2";
 import { isEqual, isVector2Equal } from "./test-assertion";
 
@@ -8,7 +8,7 @@ export class InputTest {
             "input should":
             {
                 "return up right directiont": () => {
-                    let input = new Input()
+                    let input = new InputPlayer()
                     input.isUp = true;
                     input.isRight = true;
 
@@ -17,7 +17,7 @@ export class InputTest {
                 },
 
                 "return down right direction": () => {
-                    let input = new Input()
+                    let input = new InputPlayer()
                     input.isDown = true;
                     input.isRight = true;
 
@@ -26,7 +26,7 @@ export class InputTest {
                 },
 
                 "return down direction": () => {
-                    let input = new Input()
+                    let input = new InputPlayer()
                     input.isDown = true;
 
                     let res = input.getInputDirection()
@@ -34,7 +34,7 @@ export class InputTest {
                 },
 
                 "return left direction": () => {
-                    let input = new Input()
+                    let input = new InputPlayer()
                     input.isLeft = true;
 
                     let res = input.getInputDirection()

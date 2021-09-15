@@ -5,8 +5,11 @@ export function assert(a, b, isSucccess){
     if (isSucccess) {
         return { result: "OK", color: "\x1b[32m" }
     }
-    else
+    else {
+        console.log(new Error().stack)
         throw { result: "FAIL", color:"\x1b[31m", message: "left: " + JSON.stringify(a) + ", right: " + JSON.stringify(b) }
+                
+    }    
 }
 
 export function isEqual(a, b){

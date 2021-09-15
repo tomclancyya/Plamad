@@ -6,6 +6,7 @@ import { Transform } from './transform'
 import { Scene } from './scene';
 import { InputPlayer } from '../input/input-player';
 import { Input } from '../input/input';
+import { EventManager } from '../utils/event-manager';
 export class Planet {
       /** 
          * @type {Transform}
@@ -29,26 +30,33 @@ export class Planet {
     input = null;
 
     /** 
+     * @type {EventManager}
+     * @public
+     */
+     ticker = null;
+
+    /** 
     * @param {Input} input  
     * @param {Scene} scene  
+    * @param {EventManager} ticker
     */
-    constructor(view, input, scene, fps){
+    constructor(view, input, scene, fps, ticker){
+        this.ticker = ticker;
+        this.input = input;
         this.view = view
         this.scene = scene 
         this.transform = new Transform(scene.mapSize);
 
-        new Ticker(fps, (delta) => {
-            let direction = input.getInputDirection().flipY().multiValue(delta / 1);
-            this.transform.move(direction);
-            this.render();
-        })
-
-        //context.app.ticker.add((delta) => {
-           // тут можно интерполяцию замутить
-          //  this.render();
-        //})
+        ticker.subscribe(this.tick)
 
         scene.addPlanet(this)
+    }
+
+    tick(delta) {
+        console.log(this)
+        let direction = this.input.getInputDirection().flipY().multiValue(delta / 1);
+        this.transform.move(direction);
+        this.render();
     }
 
     render() {
@@ -66,7 +74,12 @@ export class Planet {
 
     }
 
+    isActive() {
+        return this.view != null
+    }
+
     delete() {
+        this.ticker.unsubscribe(this.tick)
         this.view.delete();
         this.view = null;
         this.scene.deletePlanet(this)
