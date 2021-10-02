@@ -1,6 +1,8 @@
 export class Timer {
     timeout;
     currentTime;
+
+    // ms
     constructor(timeout){
         this.timeout = timeout
         this.currentTime = timeout

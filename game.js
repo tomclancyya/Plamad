@@ -16,9 +16,9 @@ module.exports = function (input) {
     });
 
     //app.renderer.resize(window.innerWidth, window.innerHeight);
-  //  app.renderer.view.style.position = 'absolute';
-    // focus on canvas
-   // app.renderer.view.setAttribute('tabindex', 0);    
+    //app.renderer.view.style.position = 'absolute';
+    //focus on canvas
+    //app.renderer.view.setAttribute('tabindex', 0);    
 
    let random = new Random(new Prando(1));
 

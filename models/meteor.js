@@ -1,3 +1,4 @@
+import { CommonView } from "../ui/common/common-view";
 import { Vector2 } from "../utils/vector2";
 import { GameContext } from "./game-context";
 import { Scene } from "./scene";
@@ -11,7 +12,7 @@ export class Meteor {
     transform = null
 
     /** 
-     * @type {Container}
+     * @type {CommonView}
      * @public
      */
     view = null;
@@ -24,7 +25,7 @@ export class Meteor {
 
     /** 
     * @param {GameContext} context  
-    * @param {Container} view  
+    * @param {CommonView} view  
     * @param {Scene} scene  
     * @param {Vector2} position  
     */
@@ -43,8 +44,7 @@ export class Meteor {
 
 
     render() {
-        this.view.position.x = this.transform.position.x
-        this.view.position.y = this.transform.position.y
+        this.view.updatePosition(this.transform.position)
     }
 
 
@@ -56,6 +56,7 @@ export class Meteor {
         if (this.isActive()) {        
             this.view.destroy();
             this.view = null;
+            // TODO: move this to scene, to remove sircular dependency
             this.scene.deleteMeteor(this)
         }
     }

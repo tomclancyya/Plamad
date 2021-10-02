@@ -1,3 +1,4 @@
+
 import { Vector2 } from '../utils/vector2'
 export class Transform {
     /** 
@@ -14,11 +15,15 @@ export class Transform {
         this.position = newPosition.trim(0 + this.size / 2, this.mapSize - this.size / 2);
     }
 
+    getDistance(otherVector) {
+        let sphere = this.position;
+        return sphere.getDistance(otherVector)
+    }
+
     isCollide(otherTransform) {
         let sphere = this.position;
         let other = otherTransform.position;
-        var distance = Math.sqrt((sphere.x - other.x) * (sphere.x - other.x) +
-        (sphere.y - other.y) * (sphere.y - other.y));
+        var distance = sphere.getDistance(other)
         return distance < (this.size / 2 + otherTransform.size / 2);
     }
 }

@@ -8,7 +8,6 @@ export class EventManagerTest {
             "event manager should":
             {
                 "add two subscribers and call them": () => {
-
                     let isCall1 = 0
                     let isCall2 = 0
 
@@ -38,6 +37,36 @@ export class EventManagerTest {
 
                     isEqual(isCall1, 1)
                     isEqual(isCall2, 1)
+                    return done();
+                },
+
+
+                "subscribe function of object": () => {
+
+                    let testListener = {}
+
+                    let event = new EventManager()
+
+                    class TestObject {                        
+
+                        constructor(event, testListener) {
+                            this.testListener = testListener
+                            event.subscribe(this.call)
+                        }
+                        
+                        updateTestListener()
+                        {
+                            this.testListener.hasCall = true
+                        }
+
+                        call = () => {
+                            this.updateTestListener()
+                        }
+                    }
+
+                    new TestObject(event, testListener)
+                    event.call()
+                    isEqual(testListener.hasCall, true)
                     return done();
                 }
             }

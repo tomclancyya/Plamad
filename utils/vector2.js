@@ -44,4 +44,23 @@ export class Vector2 {
         return trimMax;
     }
 
+    /**
+     * 
+     * @param {Vector2} otherVector2 
+     * @returns 
+     */
+    manhattanDistance(otherVector2){
+        return  Math.abs (x1 - x2) + Math.abs (y1 - y2)
+    } 
+
+    /**
+     * 
+     * @param {Vector2} otherVector2 
+     * @returns 
+     */
+    getDistance(otherVector2){
+        return M.sqrt(M.sqr(this.x - otherVector2.x),(this.x - otherVector2.x) +
+        M.sqr(this.y - otherVector2.y),(this.y - otherVector2.y));
+    }
+
 }

@@ -47,14 +47,24 @@ export class Planet {
         this.scene = scene 
         this.transform = new Transform(scene.mapSize);
 
-        ticker.subscribe(this.tick)
+        // вообще странный способ, тип подписываюсь на функцию которая вызывает тик.
+        // это все потому что без такого замыкания подписанная функция потеряет весь контекст почему то
+        // как теперь отписаться????
+       // ticker.subscribe(this.tick)
 
         scene.addPlanet(this)
     }
 
-    tick(delta) {
+    //interface for ticker
+    tick = (delta) => {
         console.log(this)
         let direction = this.input.getInputDirection().flipY().multiValue(delta / 1);
+        this.transform.move(direction);
+        this.render();
+    }
+
+    updateInput(delta, input) {
+        let direction = input.getInputDirection().flipY().multiValue(delta / 1);
         this.transform.move(direction);
         this.render();
     }
@@ -65,6 +75,7 @@ export class Planet {
     }
 
     onCollideMeteor(meteor){
+        //TODO: maybe need to move isCollider to Collide Engine
         if (this.transform.isCollide(meteor.transform)){
             meteor.delete()
         }

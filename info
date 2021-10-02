@@ -17,6 +17,11 @@ https://www.npmjs.com/package/eslint-plugin-jsdoc
 вывести в браузер стак трейс
 console.trace();
 
+Pixi.js не поддерживает SSR (server side rendering)
+https://github.com/NativeScript/canvas/issues/52
+https://github.com/pixijs/pixijs/issues/4769
+можно использовать специальный проект, который может пикси запустить на 
+https://github.com/Prozi/pixi-shim
 
 
 

@@ -1,7 +1,14 @@
 export class TestEngine{
+    
+
+    executedLastTest = false
     constructor(){}
 
-    runTest(tests){
+    runTest(tests, lastTest = false){
+        if (this.executedLastTest){
+            return;
+        }
+
         let testCases = tests.getTests();
         Object.entries(testCases).map((subject) => { 
             console.log('  ' + subject[0]);
@@ -16,5 +23,11 @@ export class TestEngine{
                 }
             })
         })
+
+        if (lastTest){
+            this.executedLastTest = true;
+            console.log('  ' + 'latest test was executed');
+        }
+
     }
 }

@@ -15,8 +15,10 @@
     "chai": "^4.3.4",
     "decimal.js-light": "^2.5.1",
     "mocha": "^9.1.0",
+    "pixi-shim": "^2.3.7",
     "pixi.js": "^6.1.2",
-    "prando": "^6.0.1"
+    "prando": "^6.0.1",
+    "shelljs": "^0.8.4"
   },
   "devDependencies": {
     "@babel/core": "^7.15.0",

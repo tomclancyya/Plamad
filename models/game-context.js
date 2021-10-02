@@ -1,14 +1,14 @@
 import { Random } from "../engine/random";
 import { InputPlayer } from "../input/input-player";
 import { Scene } from "./scene";
-
-const { Application } = require("pixi.js");
+//need to comment this, because pixi cannot be run in nodejs for test
+//import { Application } from "pixi.js";
 
 export class GameContext {
     /** 
     * @param {Application} app  
     */
-
+    app
     /** 
     * @param {InputPlayer} input  
     */

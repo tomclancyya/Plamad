@@ -1,3 +1,4 @@
+import { Vector2 } from "../utils/vector2";
 import { Meteor } from "./meteor";
 
 
@@ -10,10 +11,10 @@ export class Scene {
      * @public
      */
     planets = []
-      /** 
-     * @type {Meteor[]}
-     * @public
-     */
+    /** 
+   * @type {Meteor[]}
+   * @public
+   */
     meteors = []
     /** 
      * @type {number}
@@ -21,15 +22,15 @@ export class Scene {
      */
     mapSize;
 
-    constructor(mapSize, randomizer){
+    constructor(mapSize, randomizer) {
         this.mapSize = mapSize;
     }
 
-    getPlanets(){
+    getPlanets() {
         return this.planets;
     }
 
-    getMeteors(){
+    getMeteors() {
         return this.meteors;
     }
 
@@ -37,19 +38,44 @@ export class Scene {
         this.planets.push(newPlanet);
     }
 
-    addMeteor(newMeteor){
+    addMeteor(newMeteor) {
         this.meteors.push(newMeteor);
     }
 
-    deletePlanet(planet){
+    deletePlanet(planet) {
         this.planets = this.planets.filter(p => p != planet);
     }
 
-    deleteMeteor(meteor){
+    deleteMeteor(meteor) {
         this.meteors = this.meteors.filter(m => m != meteor);
     }
 
     getRandomPoint() {
+
+    }
+
+    /**
+     * 
+     * @param {Vector2} myPosition 
+     * @param {number} searchRadius 
+     */
+    getClosestMeteor(myPosition, searchRadius) {
+
+        let meteorsWithDistanceToYou = this.meteors.map(meteor => { return { 
+            distance: meteor.transform.getDistance(myPosition), meteor: meteor 
+        } })
+        let meteorsInsideRadius = meteorsWithDistanceToYou.filter(meteorDistance => { return meteorDistance.distance < searchRadius })
+
+        if (meteorsInsideRadius.length == 0)
+            return null;
+
+        return meteorsInsideRadius.reduce(function (closestMeteor, currentMeteor) {
+            if (currentMeteor.distance < closestMeteor.distance)
+                return currentMeteor
+            else
+                return closestMeteor
+
+        }, meteorsInsideRadius[0]).meteor
 
     }
 }

@@ -13,8 +13,8 @@ export class EventManager {
         this.subscribers = this.subscribers.filter(s => s != callback)
     }
 
-    call(param){
-        this.subscribers.map(s => s(param))
+    call(param1, param2){
+        this.subscribers.map(s => s(param1, param2))
     }
 
 }

@@ -13,6 +13,9 @@ import { MeteorSpawner } from '../models/meteor-spawner';
 import { Bot } from '../input/bot';
 import { EventManager } from '../utils/event-manager';
 import { Ticker } from '../engine/ticker';
+import { Network } from '../engine/network';
+import { InputPlayer } from '../input/input-player';
+import { InputMessage } from '../models/network/input-message';
 
 export class GameplayService {
   
@@ -45,8 +48,10 @@ export class GameplayService {
         let planetView = new PlanetView(0, 0, 100, 'player', '0x6699ff', app.stage);
         let planet = new Planet(planetView.container, context.input, scene, context.settings.engineFps, eventTick);
 
+        let network = new Network()
+
         for (let i = 0; i < 10; i++){
-            new Bot(app.stage, scene, context.settings.engineFps, context.random, eventTick)
+           new Bot(app.stage, scene, context.settings.engineFps, context.random, eventTick, 'bot' + i, network)
         }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
@@ -56,8 +61,36 @@ export class GameplayService {
         new CenterCoordinatesView(100, null, app.stage)
         new CenterCoordinatesView(null, 100, app.stage)
 
-        new Ticker(context.settings.engineFps, (delta) => {
-            eventTick.call(delta)
+
+        //new Ticker(context.settings.engineFps, (delta) => {
+            //eventTick.call(delta)
+        //})
+        
+
+        this.tick = () => {
+            let playerInput = context.input
+            let message = new InputMessage()
+            message.isLeft = playerInput.isLeft
+            message.isRight = playerInput.isRight
+            message.isUp = playerInput.isUp
+            message.isDown = playerInput.isDown
+            message.playerName = 'player'
+            network.sendInputMessage(message)
+        }
+
+        this.tick()
+
+        network.subscribeForInputMessage((delta, input) => {
+            console.log('player got input')
+            if (input.playerName == 'player') {
+                let inputPlayer = new InputPlayer()
+                inputPlayer.isLeft = input.isLeft
+                inputPlayer.isRight = input.isRight
+                inputPlayer.isUp = input.isUp
+                inputPlayer.isDown = input.isDown
+                planet.updateInput(delta, inputPlayer)
+                this.tick()
+            }
         })
         
 
