@@ -7,11 +7,20 @@ import { Vector2Test } from "./vector2-test.js";
 
 
 
+
 import shell from 'shelljs';
 //shell.find()
-shell.find('./').filter(f => !f.contains('node_modules.nosync')).forEach(function (file) {    
-    shell.echo(file)
-  });
+shell.find('./').filter(f => !(f.includes('node_modules.nosync')
+    || f.includes('.git/')
+    || f.includes('test/')
+    || f.includes('.json')
+    || f.includes('mini.js'))
+    && f.includes('.js')
+).forEach(function (file) {
+    let s = /[test]/
+    shell.sed('-i','[test]', 'hello', file) 
+});
+
 
 /*
 console.log('')
