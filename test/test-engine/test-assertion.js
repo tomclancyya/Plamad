@@ -1,5 +1,5 @@
 
-import * as M from '../utils/math';
+import * as M from '../../utils/math';
 
 export function assert(a, b, isSucccess){
     if (isSucccess) {

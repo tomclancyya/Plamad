@@ -4,7 +4,7 @@ import { Meteor } from "../../models/meteor";
 import { Scene } from "../../models/scene";
 import { CommonView } from "../../ui/common/common-view";
 import { Vector2 } from "../../utils/vector2";
-import { done, isEqual, isNumberEqual, isVector2Equal } from "../test-assertion";
+import { done, isEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
 
 
 

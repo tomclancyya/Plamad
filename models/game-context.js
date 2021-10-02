@@ -1,8 +1,11 @@
+/*[test]*///import pixi from "pixi-shim";
+/*[production]*/import pixi from "pixi.js";
+
 import { Random } from "../engine/random";
 import { InputPlayer } from "../input/input-player";
 import { Scene } from "./scene";
-//need to comment this, because pixi cannot be run in nodejs for test
-//import { Application } from "pixi.js";
+
+const { Application } = pixi;
 
 export class GameContext {
     /** 

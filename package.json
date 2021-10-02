@@ -14,6 +14,7 @@
     "@pixi/interaction": "^6.1.2",
     "chai": "^4.3.4",
     "decimal.js-light": "^2.5.1",
+    "escape-string-regexp": "^5.0.0",
     "mocha": "^9.1.0",
     "pixi-shim": "^2.3.7",
     "pixi.js": "^6.1.2",

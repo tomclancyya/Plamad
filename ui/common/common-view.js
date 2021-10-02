@@ -1,7 +1,6 @@
 
-/*[test]*/import pixi from "pixi-shim";
-/*[production]*///import pixi from "pixi.js";
-
+/*[test]*///import pixi from "pixi-shim";
+/*[production]*/import pixi from "pixi.js";
 const { Container } = pixi;
 import { Vector2 } from "../../utils/vector2";
 

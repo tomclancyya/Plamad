@@ -1,6 +1,6 @@
-import { InputPlayer } from "../input/input-player";
-import { Vector2 } from "../utils/vector2";
-import { isEqual, isVector2Equal } from "./test-assertion";
+import { InputPlayer } from "../../input/input-player";
+import { Vector2 } from "../../utils/vector2";
+import { isEqual, isVector2Equal } from "../test-engine/test-assertion";
 
 export class InputTest {
     getTests() {
