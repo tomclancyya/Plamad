@@ -1,3 +1,4 @@
+import { State } from "pixi.js";
 import { Ticker } from "../engine/ticker";
 import { InputMessage } from "../models/network/input-message";
 import { Planet } from "../models/planet";

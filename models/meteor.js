@@ -54,7 +54,7 @@ export class Meteor {
         // пока коллайд движок не пройдется по всем элементам.
         //поэтому добавил isActive чтобы проверять не удалился ли объект
         if (this.isActive()) {        
-            this.view.destroy();
+            this.view.delete();
             this.view = null;
             // TODO: move this to scene, to remove sircular dependency
             this.scene.deleteMeteor(this)

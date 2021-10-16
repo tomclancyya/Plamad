@@ -19,12 +19,10 @@ export class MeteorSpawner {
      */
     constructor(random, scene, pixiStage, maxAmount, spawnPerSecond, meteorViewClass){
         new Ticker(spawnPerSecond, (delta) => {
-            console.log(scene.getMeteors())
             if (scene.getMeteors().length < maxAmount){
-                console.log('spawn')
                 let meteorView = new MeteorView(0, 0, 50, '0xcc6600', pixiStage)
                 let position = random.getVectorSquare(0, scene.mapSize)
-                new Meteor(meteorView.container, scene, position);
+                new Meteor(meteorView, scene, position);
             }
         })
     }

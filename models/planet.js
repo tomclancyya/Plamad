@@ -57,7 +57,6 @@ export class Planet {
 
     //interface for ticker
     tick = (delta) => {
-        console.log(this)
         let direction = this.input.getInputDirection().flipY().multiValue(delta / 1);
         this.transform.move(direction);
         this.render();
@@ -82,7 +81,7 @@ export class Planet {
     }
 
     onCollidePlanet(planet){
-
+        // do somethong
     }
 
     isActive() {

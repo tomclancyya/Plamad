@@ -1,11 +1,10 @@
-/*[test]*///import pixi from "pixi-shim";
-/*[production]*/import pixi from "pixi.js";
+
+/*[test]*///import pixi from "pixi-shim"; const { Application } = pixi;
+/*[production]*/import { Application } from "pixi.js";
 
 import { Random } from "../engine/random";
 import { InputPlayer } from "../input/input-player";
 import { Scene } from "./scene";
-
-const { Application } = pixi;
 
 export class GameContext {
     /** 

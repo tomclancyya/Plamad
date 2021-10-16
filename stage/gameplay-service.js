@@ -81,7 +81,6 @@ export class GameplayService {
         this.tick()
 
         network.subscribeForInputMessage((delta, input) => {
-            console.log('player got input')
             if (input.playerName == 'player') {
                 let inputPlayer = new InputPlayer()
                 inputPlayer.isLeft = input.isLeft
@@ -96,9 +95,16 @@ export class GameplayService {
 
         //camera
         app.ticker.add((delta) => {
-            let pos = planet.transform.position;
-            app.stage.pivot.set(pos.x - (app.renderer.width / 2), pos.y  - (app.renderer.width / 2));
+            let pos = planet.transform.position;            
+
+            //(0,0) for us is center of the screen
+            app.stage.position.x = app.renderer.width/2;
+            app.stage.position.y = app.renderer.height/2;
+            //scale it
+
             app.stage.scale.set(0.5) 
+            app.stage.pivot.set(pos.x, pos.y);
+
         })
 
     }

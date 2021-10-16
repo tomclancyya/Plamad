@@ -59,8 +59,8 @@ export class Vector2 {
      * @returns 
      */
     getDistance(otherVector2){
-        return M.sqrt(M.sqr(this.x - otherVector2.x),(this.x - otherVector2.x) +
-        M.sqr(this.y - otherVector2.y),(this.y - otherVector2.y));
+        return M.sqrt(M.sqr(this.x - otherVector2.x) +
+        M.sqr(this.y - otherVector2.y));
     }
 
 }

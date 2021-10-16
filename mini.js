@@ -1912,11 +1912,13 @@ var Network = /*#__PURE__*/function () {
     _defineProperty(this, "messagesToSend", []);
 
     this.event = new _eventManager.EventManager();
-    var timer = new _timer.Timer(100);
-    var ticker = new _ticker.Ticker(30, function (delta) {
+    var sendMessagePollingIntervalMs = 100;
+    var timer = new _timer.Timer(sendMessagePollingIntervalMs);
+    var checkTimerPerSecond = 30;
+    var ticker = new _ticker.Ticker(checkTimerPerSecond, function (delta) {
       if (timer.isFinished()) {
         _this.messagesToSend.map(function (i) {
-          return _this._receiveInputMessage(delta, i);
+          return _this._receiveInputMessage(sendMessagePollingIntervalMs, i);
         });
 
         timer.reset();
@@ -2036,9 +2038,6 @@ var Ticker = /*#__PURE__*/function () {
     this.previousTime = Date.now();
     var delta = 1 / tickPerSeconds * 1000;
     this.interval = setInterval(function () {
-      //let delta = Date.now() - this.previousTime;
-      //this.previousTime = Date.now()
-      //console.log(delta)
       callback(delta);
     }, delta);
   }
@@ -2095,6 +2094,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Bot = void 0;
+
+var _pixi = require("pixi.js");
 
 var _ticker = require("../engine/ticker");
 
@@ -2247,7 +2248,7 @@ var SearchAndAttackState = /*#__PURE__*/function () {
   return SearchAndAttackState;
 }();
 
-},{"../engine/ticker":13,"../models/network/input-message":22,"../models/planet":23,"../ui/planet-view":77,"../utils/timer":80,"../utils/vector2":81,"./input":18,"./input-bot":16,"./input-player":17}],16:[function(require,module,exports){
+},{"../engine/ticker":13,"../models/network/input-message":22,"../models/planet":23,"../ui/planet-view":77,"../utils/timer":80,"../utils/vector2":81,"./input":18,"./input-bot":16,"./input-player":17,"pixi.js":67}],16:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -2456,13 +2457,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.GameContext = void 0;
 
+var _pixi = require("pixi.js");
+
 var _random = require("../engine/random");
 
 var _inputPlayer = require("../input/input-player");
 
 var _scene = require("./scene");
-
-var _pixi = require("pixi.js");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2541,13 +2542,10 @@ function MeteorSpawner(random, scene, pixiStage, maxAmount, spawnPerSecond, mete
   _classCallCheck(this, MeteorSpawner);
 
   new _ticker.Ticker(spawnPerSecond, function (delta) {
-    console.log(scene.getMeteors());
-
     if (scene.getMeteors().length < maxAmount) {
-      console.log('spawn');
       var meteorView = new _meteorView.MeteorView(0, 0, 50, '0xcc6600', pixiStage);
       var position = random.getVectorSquare(0, scene.mapSize);
-      new _meteor.Meteor(meteorView.container, scene, position);
+      new _meteor.Meteor(meteorView, scene, position);
     }
   });
 };
@@ -2636,7 +2634,7 @@ var Meteor = /*#__PURE__*/function () {
       // пока коллайд движок не пройдется по всем элементам.
       //поэтому добавил isActive чтобы проверять не удалился ли объект
       if (this.isActive()) {
-        this.view.destroy();
+        this.view["delete"]();
         this.view = null; // TODO: move this to scene, to remove sircular dependency
 
         this.scene.deleteMeteor(this);
@@ -2758,8 +2756,6 @@ var Planet = /*#__PURE__*/function () {
     _defineProperty(this, "ticker", null);
 
     _defineProperty(this, "tick", function (delta) {
-      console.log(_this);
-
       var direction = _this.input.getInputDirection().flipY().multiValue(delta / 1);
 
       _this.transform.move(direction);
@@ -2803,7 +2799,8 @@ var Planet = /*#__PURE__*/function () {
     }
   }, {
     key: "onCollidePlanet",
-    value: function onCollidePlanet(planet) {}
+    value: function onCollidePlanet(planet) {// do somethong
+    }
   }, {
     key: "isActive",
     value: function isActive() {
@@ -45829,8 +45826,6 @@ function GameplayService(context) {
 
   this.tick();
   network.subscribeForInputMessage(function (delta, input) {
-    console.log('player got input');
-
     if (input.playerName == 'player') {
       var inputPlayer = new _inputPlayer.InputPlayer();
       inputPlayer.isLeft = input.isLeft;
@@ -45844,9 +45839,13 @@ function GameplayService(context) {
   }); //camera
 
   app.ticker.add(function (delta) {
-    var pos = planet.transform.position;
-    app.stage.pivot.set(pos.x - app.renderer.width / 2, pos.y - app.renderer.width / 2);
+    var pos = planet.transform.position; //(0,0) for us is center of the screen
+
+    app.stage.position.x = app.renderer.width / 2;
+    app.stage.position.y = app.renderer.height / 2; //scale it
+
     app.stage.scale.set(0.5);
+    app.stage.pivot.set(pos.x, pos.y);
   });
 } //render(planet){
 //    this.app.stage.addChild(planet)
@@ -46104,6 +46103,11 @@ var CommonView = /*#__PURE__*/function () {
       this.container.position.x = newPosition.x;
       this.container.position.y = newPosition.y;
     }
+  }, {
+    key: "delete",
+    value: function _delete() {
+      this.container.destroy();
+    }
   }]);
 
   return CommonView;
@@ -46201,8 +46205,6 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 var _require = require('pixi.js'),
     Container = _require.Container;
 
@@ -46210,11 +46212,6 @@ var MeteorView = /*#__PURE__*/function (_CommonView) {
   _inherits(MeteorView, _CommonView);
 
   var _super = _createSuper(MeteorView);
-
-  /** 
-   * @type {Container}
-   * @public
-   */
 
   /** 
   * @param {number} x
@@ -46269,15 +46266,7 @@ var MeteorView = /*#__PURE__*/function (_CommonView) {
     parent.addChild(container);
     container.x = x;
     container.y = y;
-
-    _this["delete"] = function () {
-      parent.removeChild(container);
-    };
-
     _this = _super.call(this, container);
-
-    _defineProperty(_assertThisInitialized(_this), "container", null);
-
     return _possibleConstructorReturn(_this, _assertThisInitialized(_this));
   }
 
@@ -46613,7 +46602,7 @@ var Vector2 = /*#__PURE__*/function () {
   }, {
     key: "getDistance",
     value: function getDistance(otherVector2) {
-      return M.sqrt(M.sqr(this.x - otherVector2.x), this.x - otherVector2.x + M.sqr(this.y - otherVector2.y), this.y - otherVector2.y);
+      return M.sqrt(M.sqr(this.x - otherVector2.x) + M.sqr(this.y - otherVector2.y));
     }
   }]);
 

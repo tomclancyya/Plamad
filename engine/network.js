@@ -11,10 +11,12 @@ export class Network {
     constructor() {
         this.event = new EventManager()
 
-        let timer = new Timer(100)
-        let ticker = new Ticker(30, (delta) => {
+        let sendMessagePollingIntervalMs = 100
+        let timer = new Timer(sendMessagePollingIntervalMs)
+        let checkTimerPerSecond = 30
+        let ticker = new Ticker(checkTimerPerSecond, (delta) => {
             if (timer.isFinished()) {
-                this.messagesToSend.map(i => this._receiveInputMessage(delta, i))
+                this.messagesToSend.map(i => this._receiveInputMessage(sendMessagePollingIntervalMs, i))
                 timer.reset()
             }
             timer.update(delta)            

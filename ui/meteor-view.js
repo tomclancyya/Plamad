@@ -6,12 +6,6 @@ export class MeteorView extends CommonView {
 
 
     /** 
-     * @type {Container}
-     * @public
-     */
-    container = null;
-
-    /** 
     * @param {number} x
     * @param {number} y  
     * @param {number} diameter 
@@ -61,10 +55,6 @@ export class MeteorView extends CommonView {
 
         container.x = x;
         container.y = y;
-
-        this.delete = function () {
-            parent.removeChild(container)
-        }
 
         super(container)
 

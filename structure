@@ -1,0 +1,9 @@
+structure
+
+UserInputTicker                       NetworkSenderTicker                     GameTicker
+UserKeyBoardEvent -> InputExternalData -> NetworkSender -> NetworkReceiver -> InputInternalData -> Planet 
+                    InputDataManager                                          InputDataManager
+
+InputExternalData
+ inputs[]
+    вопрос InputExternalData должен содержать инпуты от всех участвиков или у каждого участника должегн бытль inputExternalData
