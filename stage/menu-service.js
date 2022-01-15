@@ -8,11 +8,10 @@ let  { MenuView }  = require('../ui/menu-view');
 export class MenuService { 
     /** 
     * @param {GameContext} context  
-    * @ param {function(MenuView)} menuView
     */
     constructor(context) {
         new MenuView(context, () => {
-            new GameplayService(context);
+            context.loadGameplay();
         }, ()=>{}, ()=>{}, ()=>{});
     }
 }

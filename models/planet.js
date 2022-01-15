@@ -1,12 +1,12 @@
 import { Container } from 'pixi.js';
 import { Button } from '../ui/button-view'
-import { Ticker } from '../engine/ticker';
 import { GameContext } from './game-context';
 import { Transform } from './transform'
 import { Scene } from './scene';
 import { InputPlayer } from '../input/input-player';
 import { Input } from '../input/input';
 import { EventManager } from '../utils/event-manager';
+
 export class Planet {
       /** 
          * @type {Transform}
@@ -29,43 +29,26 @@ export class Planet {
 
     input = null;
 
-    /** 
-     * @type {EventManager}
-     * @public
-     */
-     ticker = null;
+    name = null;
+
+    score = 0;
 
     /** 
-    * @param {Input} input  
     * @param {Scene} scene  
-    * @param {EventManager} ticker
     */
-    constructor(view, input, scene, fps, ticker){
-        this.ticker = ticker;
-        this.input = input;
+    constructor(view, scene, fps, name){
         this.view = view
         this.scene = scene 
         this.transform = new Transform(scene.mapSize);
-
-        // вообще странный способ, тип подписываюсь на функцию которая вызывает тик.
-        // это все потому что без такого замыкания подписанная функция потеряет весь контекст почему то
-        // как теперь отписаться????
-       // ticker.subscribe(this.tick)
+        this.name = name;
 
         scene.addPlanet(this)
     }
 
-    //interface for ticker
-    tick = (delta) => {
-        let direction = this.input.getInputDirection().flipY().multiValue(delta / 1);
-        this.transform.move(direction);
-        this.render();
-    }
-
-    updateInput(delta, input) {
-        let direction = input.getInputDirection().flipY().multiValue(delta / 1);
-        this.transform.move(direction);
-        this.render();
+    moveByVector(delta, input) {
+        //console.log(delta)
+        let direction = input.multiValue(delta / 1);
+        this.transform.move(direction);     
     }
 
     render() {
@@ -76,7 +59,8 @@ export class Planet {
     onCollideMeteor(meteor){
         //TODO: maybe need to move isCollider to Collide Engine
         if (this.transform.isCollide(meteor.transform)){
-            meteor.delete()
+            meteor.delete();
+            this.score++;
         }
     }
 
@@ -89,9 +73,12 @@ export class Planet {
     }
 
     delete() {
-        this.ticker.unsubscribe(this.tick)
         this.view.delete();
         this.view = null;
         this.scene.deletePlanet(this)
+    }
+
+    tick() {        
+        this.render();   
     }
 }

@@ -1,5 +1,7 @@
 import { Vector2 } from "../utils/vector2";
 import { Meteor } from "./meteor";
+import { Planet } from "./planet";
+
 
 
 // store current objects in scene
@@ -24,6 +26,10 @@ export class Scene {
 
     constructor(mapSize, randomizer) {
         this.mapSize = mapSize;
+    }
+
+    getObjects() {        
+        return this.planets.concat(this.meteors)
     }
 
     getPlanets() {

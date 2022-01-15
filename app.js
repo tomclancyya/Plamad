@@ -1,43 +1,53 @@
-const { InputPlayer } = require('./input/input-player.js');
+const { InputKeyboard } = require('./input/input-keyboard.js');
 
 
-let input = new InputPlayer()
+let input = new InputKeyboard()
 document.addEventListener('keydown', function(event) {
     if (event.code == 'ArrowUp') {
-        input.isUp = true;
+        input.arrowUp = true;
     }
 
     if (event.code == 'ArrowDown') {
-        input.isDown = true;
+        input.arrowDown = true;
     }
 
     if (event.code == 'ArrowRight') {
-        input.isRight = true;
+        input.arrowRight = true;
     }
 
     if (event.code == 'ArrowLeft') {
-        input.isLeft = true;
+        input.arrowLeft = true;
     }
 })
 
 window.addEventListener('keyup', function(event) {
     if (event.code == 'ArrowUp') {
-        input.isUp = false;
+        input.arrowUp = false;
     }
 
     if (event.code == 'ArrowDown') {
-        input.isDown = false;
+        input.arrowDown = false;
     }
 
     if (event.code == 'ArrowRight') {
-        input.isRight = false;      
+        input.arrowRight = false;      
     }
 
     if (event.code == 'ArrowLeft') {
-        input.isLeft = false;
+        input.arrowLeft = false;
     }
 })
 
 
 let gameView = require('./game.js')(input)
 document.getElementById('game').appendChild(gameView);
+let canvas = document.getElementsByTagName('canvas')[0]
+
+let bodyHeight = window.innerHeight;
+let bodyWidth = document.body.clientWidth
+if (bodyHeight < bodyWidth)
+    canvas.style.height = bodyHeight + 'px'
+else 
+    canvas.style.width = bodyWidth + 'px'
+
+

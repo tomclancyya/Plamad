@@ -1,4 +1,5 @@
 import { Application } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { Button } from '../ui/button-view';
 import { GameContext } from '../models/game-context';
 import { Planet } from '../models/planet';
@@ -13,9 +14,12 @@ import { MeteorSpawner } from '../models/meteor-spawner';
 import { Bot } from '../input/bot';
 import { EventManager } from '../utils/event-manager';
 import { Ticker } from '../engine/ticker';
-import { Network } from '../engine/network';
 import { InputPlayer } from '../input/input-player';
 import { InputMessage } from '../models/network/input-message';
+import { GameInputDriver } from '../input/game-input-driver';
+import { MutableInputManager } from '../input/mutable-input-manager';
+import { TextView } from '../ui/text-view';
+import { ResultView } from '../ui/result-view';
 
 export class GameplayService {
   
@@ -30,6 +34,8 @@ export class GameplayService {
         * @type {Application}  
         */
         let app = context.app;
+
+        let inputManager = context.input
         
         function createTile(x, y){
             new Button(x, y, 100, 100, '', '0x111111', app.stage, () => {});
@@ -37,7 +43,7 @@ export class GameplayService {
 
         for (let i = 0; i < 20; i++){
             for (let j = 0; j < 20; j++){
-                createTile(i * 100, j * 100)
+                createTile(i * 100 + 50, j * 100 + 50)
             }
         }
 
@@ -45,13 +51,15 @@ export class GameplayService {
 
         let scene = new Scene(context.settings.mapSize);
 
-        let planetView = new PlanetView(0, 0, 100, 'player', '0x6699ff', app.stage);
-        let planet = new Planet(planetView.container, context.input, scene, context.settings.engineFps, eventTick);
+        let planetView = new PlanetView(0, 0, 100, 'player1', '0x6699ff', app.stage);
+        let planet = new Planet(planetView.container, scene, context.settings.engineFps, 'player1');
 
-        let network = new Network()
-
+        /**
+         * @type {Bot[]}  
+         */
+        let bots = []
         for (let i = 0; i < 10; i++){
-           new Bot(app.stage, scene, context.settings.engineFps, context.random, eventTick, 'bot' + i, network)
+            bots.push(new Bot(app.stage, scene, context.settings.engineFps, context.random, 'bot' + i, inputManager))
         }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
@@ -61,57 +69,59 @@ export class GameplayService {
         new CenterCoordinatesView(100, null, app.stage)
         new CenterCoordinatesView(null, 100, app.stage)
 
+        let inputDriver = new GameInputDriver(context.input, scene)
 
-        //new Ticker(context.settings.engineFps, (delta) => {
-            //eventTick.call(delta)
-        //})
-        
+        let tickers = []
 
-        this.tick = () => {
-            let playerInput = context.input
-            let message = new InputMessage()
-            message.isLeft = playerInput.isLeft
-            message.isRight = playerInput.isRight
-            message.isUp = playerInput.isUp
-            message.isDown = playerInput.isDown
-            message.playerName = 'player'
-            network.sendInputMessage(message)
-        }
-
-        this.tick()
-
-        network.subscribeForInputMessage((delta, input) => {
-            if (input.playerName == 'player') {
-                let inputPlayer = new InputPlayer()
-                inputPlayer.isLeft = input.isLeft
-                inputPlayer.isRight = input.isRight
-                inputPlayer.isUp = input.isUp
-                inputPlayer.isDown = input.isDown
-                planet.updateInput(delta, inputPlayer)
-                this.tick()
-            }
+        //ui container
+        let ui = new Container();
+        app.stage.addChild(ui);
+        let scoreView = new TextView(0, -450, "123567", ui)
+        let button = new Button(450, -450, 100, 100, "☰", "white", ui, () => {
+            new ResultView(ui, planet.score, () => {
+                tickers.map(t => t.stop())
+                context.loadGameplay()
+            }, () => {
+                tickers.map(t => t.stop())
+                context.loadMenu()
+            },)
         })
-        
 
         //camera
-        app.ticker.add((delta) => {
+
+
+        //app.ticker.add((delta) => {
+        // ui ticker
+        tickers.push(new Ticker(100, (delta) => {
             let pos = planet.transform.position;            
 
-            //(0,0) for us is center of the screen
-            app.stage.position.x = app.renderer.width/2;
-            app.stage.position.y = app.renderer.height/2;
-            //scale it
-
-            app.stage.scale.set(0.5) 
+        
+            //move camera
             app.stage.pivot.set(pos.x, pos.y);
 
-        })
+            //adjust ui container
+            ui.x = pos.x;
+            ui.y = pos.y;
+            app.stage.setChildIndex(ui, app.stage.children.length - 1)
+            scoreView.setText(planet.score + "")
+
+            scene.getObjects().map(t => t.tick(delta))
+        }))        
+
+
+        // tick driver (temporary use simple ticker)
+        tickers.push(new Ticker(context.settings.engineFps, (delta) => {
+            bots.map(b => b.tick(delta))
+        }))
+
+        // network tick driver
+        tickers.push(new Ticker(20, (delta) => {
+            inputDriver.networkTick(delta);
+            collision.isPlanetCollidesMeteor();
+            meteorSpawner.networkUpdate(delta);
+        }))
 
     }
-
-    //render(planet){
-    //    this.app.stage.addChild(planet)
-    //}
 }
 
 /*

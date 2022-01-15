@@ -32,9 +32,6 @@ export class CollisionEngine {
     */
     constructor(scene, fps) {
         this.scene = scene
-        new Ticker(fps, (delta) => {
-            this.isPlanetCollidesMeteor();
-        })
     }
 
     isPlanetCollidesPlanet() {

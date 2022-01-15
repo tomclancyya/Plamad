@@ -47,6 +47,10 @@ export class Meteor {
         this.view.updatePosition(this.transform.position)
     }
 
+    tick() {
+        
+    }
+
 
 
     delete() {

@@ -1,7 +1,7 @@
 structure
 
 UserInputTicker                       NetworkSenderTicker                     GameTicker
-UserKeyBoardEvent -> InputExternalData -> NetworkSender -> NetworkReceiver -> InputInternalData -> Planet 
+UserKeyBoardEvent -> PlayerInput -> NetworkSender -> NetworkReceiver -> InputForGame -> Planet 
                     InputDataManager                                          InputDataManager
 
 InputExternalData

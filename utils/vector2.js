@@ -34,6 +34,10 @@ export class Vector2 {
         return new Vector2(M.add(this.x, a.x), M.add(this.y, a.y))
     }
 
+    substract(a){
+        return new Vector2(M.sub(this.x, a.x), M.sub(this.y, a.y))
+    }
+
     multiValue(a){
         return new Vector2(M.multi(this.x, a), M.multi(this.y, a))
     }
@@ -62,5 +66,7 @@ export class Vector2 {
         return M.sqrt(M.sqr(this.x - otherVector2.x) +
         M.sqr(this.y - otherVector2.y));
     }
+
+
 
 }

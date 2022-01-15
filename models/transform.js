@@ -1,4 +1,4 @@
-
+import * as M from '../utils/math';
 import { Vector2 } from '../utils/vector2'
 export class Transform {
     /** 
@@ -13,6 +13,15 @@ export class Transform {
     move(vectorDelta){
         let newPosition = this.position.add(vectorDelta);
         this.position = newPosition.trim(0 + this.size / 2, this.mapSize - this.size / 2);
+    }
+
+    isCollideBorder(){
+        let x = this.position.x
+        let y = this.position.y
+        return M.isEqual(x, 0 + this.size / 2) ||
+            M.isEqual(x, this.mapSize - this.size / 2) ||
+            M.isEqual(y, 0 + this.size / 2) ||
+            M.isEqual(y, this.mapSize - this.size / 2) 
     }
 
     getDistance(otherVector) {
