@@ -1940,7 +1940,7 @@ var Random = /*#__PURE__*/function () {
 
 exports.Random = Random;
 
-},{"../utils/vector2":89,"Prando":66}],12:[function(require,module,exports){
+},{"../utils/vector2":90,"Prando":66}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2083,19 +2083,34 @@ var Bot = /*#__PURE__*/function () {
 
     _defineProperty(this, "name", void 0);
 
+    _defineProperty(this, "moveDirection", null);
+
     this.name = name;
     this.inputManager = inputManager;
     this.input = new _inputBot.InputBot();
     var planetView = new _planetView.PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
     this.planet = new _planet.Planet(planetView.container, scene, fps, name);
     var inputConverter = new BotToInputManagerSetter(name, inputManager);
-    this.stateManager = new StateManager(this.planet, scene, inputConverter, random);
+    this.stateManager = new StateManager();
+    var states = [new MovingState(this.stateManager, this.planet, scene, null, random), new SearchAndAttackState(this.stateManager, this.planet, scene, null, random)];
+    this.stateManager.setStates(states);
   }
 
   _createClass(Bot, [{
     key: "tick",
     value: function tick(delta) {
       this.stateManager.tick(delta);
+      this.stateManager.logCurrentState();
+    }
+  }, {
+    key: "getDirection",
+    value: function getDirection() {
+      var _this$stateManager, _this$stateManager$cu;
+
+      var vector2 = (_this$stateManager = this.stateManager) === null || _this$stateManager === void 0 ? void 0 : (_this$stateManager$cu = _this$stateManager.currentState) === null || _this$stateManager$cu === void 0 ? void 0 : _this$stateManager$cu.currentDirection;
+      if (!vector2) vector2 = new _vector.Vector2();
+      var message = new _inputInternal.InputInternal(this.name, vector2.x < -0.2, vector2.x > 0.2, vector2.y > 0.2, vector2.y < -0.2);
+      return message;
     }
   }]);
 
@@ -2158,13 +2173,16 @@ var MovingState = /*#__PURE__*/function () {
 
       if (this.planet.transform.isCollideBorder()) {
         this.currentDirection = this.random.getVector();
-      }
+        console.log('[MovingState] border colided, getting random vector: ' + JSON.stringify(this.currentDirection));
+      } //this.input.addInput(this.currentDirection)
 
-      this.input.addInput(this.currentDirection);
+
       this.previousPosition = planetPosition;
       this.timer.update(delta);
+      console.log('[MovingState] move: ' + JSON.stringify(this.currentDirection));
 
       if (this.timer.isFinished()) {
+        console.log('[MovingState] time is finished, move to another state: SearchAndAttackState ');
         this.stateManager.nextState(StatesEnum.SearchAndAttackState);
       }
     }
@@ -2194,7 +2212,7 @@ var SearchAndAttackState = /*#__PURE__*/function () {
 
     _defineProperty(this, "currentDirection", null);
 
-    _defineProperty(this, "timer", new _timer.Timer(5000));
+    _defineProperty(this, "timer", new _timer.Timer(200));
 
     _defineProperty(this, "random", null);
 
@@ -2214,8 +2232,9 @@ var SearchAndAttackState = /*#__PURE__*/function () {
     key: "update",
     value: function update(delta) {
       if (this.currentDirection) {
-        this.input.addInput(this.currentDirection);
+        //this.input.addInput(JSON.stringify(this.currentDirection))
         this.timer.update(delta);
+        console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection));
       } else {
         var planetPosition = this.planet.transform.position;
         var closestMeteor = this.scene.getClosestMeteor(planetPosition, 400);
@@ -2223,12 +2242,16 @@ var SearchAndAttackState = /*#__PURE__*/function () {
         if (closestMeteor) {
           var meteorPosition = closestMeteor.transform.position;
           this.currentDirection = meteorPosition.substract(planetPosition).getNormalized();
+          console.log('[SearchAndAttackState] found new meteor: ' + JSON.stringify(this.currentDirection));
         } else {
+          console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState');
           this.stateManager.nextState(StatesEnum.MovingState);
         }
       }
 
-      if (this.timer.isFinished()) {//this.stateManager.nextState(StatesEnum.MovingState)
+      if (this.timer.isFinished()) {
+        console.log('[SearchAndAttackState] time is finished, changing state to MovingState');
+        this.stateManager.nextState(StatesEnum.MovingState);
       }
     }
   }, {
@@ -2248,18 +2271,26 @@ var StatesEnum = {
 };
 
 var StateManager = /*#__PURE__*/function () {
-  function StateManager(planet, scene, input, random) {
+  function StateManager() {
     _classCallCheck(this, StateManager);
 
     _defineProperty(this, "states", []);
 
     _defineProperty(this, "currentState", null);
-
-    this.states.push(new MovingState(this, planet, scene, input, random), new SearchAndAttackState(this, planet, scene, input, random));
-    this.nextState(StatesEnum.MovingState);
   }
 
   _createClass(StateManager, [{
+    key: "setStates",
+    value: function setStates(states) {
+      this.states = states;
+      this.nextState(StatesEnum.MovingState);
+    }
+  }, {
+    key: "logCurrentState",
+    value: function logCurrentState() {
+      console.log(this.currentState.name);
+    }
+  }, {
     key: "tick",
     value: function tick(delta) {
       this.currentState.update(delta);
@@ -2280,7 +2311,7 @@ var StateManager = /*#__PURE__*/function () {
   return StateManager;
 }();
 
-},{"../engine/ticker":12,"../models/network/input-message":26,"../models/planet":27,"../models/scene":28,"../ui/planet-view":83,"../utils/timer":88,"../utils/vector2":89,"./input":20,"./input-bot":16,"./input-internal":17,"./input-player":19,"./mutable-input-manager":21,"pixi.js":72}],15:[function(require,module,exports){
+},{"../engine/ticker":12,"../models/network/input-message":26,"../models/planet":27,"../models/scene":28,"../ui/planet-view":83,"../utils/timer":89,"../utils/vector2":90,"./input":20,"./input-bot":16,"./input-internal":17,"./input-player":19,"./mutable-input-manager":21,"pixi.js":72}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2380,7 +2411,7 @@ var GameInputDriver = /*#__PURE__*/function () {
 
 exports.GameInputDriver = GameInputDriver;
 
-},{"../models/planet":27,"../models/scene":28,"../utils/vector2":89,"./input-internal":17,"./mutable-input-manager":21}],16:[function(require,module,exports){
+},{"../models/planet":27,"../models/scene":28,"../utils/vector2":90,"./input-internal":17,"./mutable-input-manager":21}],16:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -2450,7 +2481,7 @@ var InputBot = /*#__PURE__*/function (_Input) {
 
 exports.InputBot = InputBot;
 
-},{"../utils/vector2":89,"./input":20}],17:[function(require,module,exports){
+},{"../utils/vector2":90,"./input":20}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2612,7 +2643,7 @@ var InputPlayer = /*#__PURE__*/function (_Input) {
 
 exports.InputPlayer = InputPlayer;
 
-},{"../utils/vector2":89,"./input":20}],20:[function(require,module,exports){
+},{"../utils/vector2":90,"./input":20}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2648,7 +2679,7 @@ var Input = /*#__PURE__*/function () {
 
 exports.Input = Input;
 
-},{"../utils/vector2":89}],21:[function(require,module,exports){
+},{"../utils/vector2":90}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2767,24 +2798,44 @@ var Camera = /*#__PURE__*/function () {
       stage.pivot.set(0, 0);
     }
   }, {
+    key: "setCameraBySettings",
+    value: function setCameraBySettings() {
+      var cameraMode = this.settings.cameraMode;
+
+      switch (cameraMode) {
+        case _settings.CameraModeEnum.showPlayer:
+          this.setFollowPlayerMode();
+          break;
+
+        case _settings.CameraModeEnum.showMap:
+          this.setSeeWholeMapMode();
+          break;
+
+        case _settings.CameraModeEnum.showBot:
+          this.setFollowPlayerMode();
+          break;
+      }
+    }
+  }, {
     key: "setFollowPlayerMode",
     value: function setFollowPlayerMode() {
       var stage = this.app.stage; //(0,0) for us is center of the screen
 
       stage.position.x = this.app.renderer.width / 2;
       stage.position.y = this.app.renderer.height / 2; //scale it
+      //stage.scale.set(0.5) 
 
-      stage.scale.set(0.5);
+      stage.scale.set(0.4);
     }
   }, {
     key: "setSeeWholeMapMode",
     value: function setSeeWholeMapMode() {
       var stage = this.app.stage; //(0,0) for us is center of the screen
 
-      stage.position.x = this.settings.mapSize / 2;
-      stage.position.y = this.settings.mapSize / 2; //scale it
+      stage.position.x = this.app.renderer.width / 2;
+      stage.position.y = this.app.renderer.height / 2; //scale it
 
-      stage.scale.set(1);
+      stage.scale.set(0.2);
     }
   }]);
 
@@ -2893,7 +2944,7 @@ var GameContext = /*#__PURE__*/function () {
   }, {
     key: "loadGameplay",
     value: function loadGameplay() {
-      this.camera.setFollowPlayerMode();
+      this.camera.setCameraBySettings();
       this.cleanStage();
       new _gameplayService.GameplayService(this);
     }
@@ -2922,6 +2973,8 @@ var _meteorView = require("../ui/meteor-view");
 
 var _timer = require("../utils/timer");
 
+var _gameContext = require("./game-context");
+
 var _meteor = require("./meteor");
 
 var _scene = require("./scene");
@@ -2932,9 +2985,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var MeteorSpawner = /*#__PURE__*/function () {
   /**
-   * 
+   * @param {GameContext} context 
    * @param {Random} random 
    * @param {Scene} scene 
    * @param {Container} pixiStage 
@@ -2942,14 +2997,18 @@ var MeteorSpawner = /*#__PURE__*/function () {
    * @param {number} spawnPerSecond 
    * @param {typeof MeteorView} meteorViewClass - will move MeteorView class reference upper
    */
-  function MeteorSpawner(random, scene, pixiStage, maxAmount, spawnPerSecond, meteorViewClass) {
+  function MeteorSpawner(context, scene) {
     _classCallCheck(this, MeteorSpawner);
 
-    this.timer = new _timer.Timer(spawnPerSecond);
+    _defineProperty(this, "spawnedAmount", 0);
+
+    this.timer = new _timer.Timer(context.settings.spawnAsteroidPerSecond);
     this.scene = scene;
-    this.random = random;
-    this.maxAmount = maxAmount;
-    this.pixiStage = pixiStage;
+    this.random = context.random;
+    this.maxAsteroids = context.settings.maxAsteroids;
+    this.maxAsteroidsSameTime = context.settings.maxAsteroidsSameTime;
+    this.pixiStage = context.app.stage;
+    this.spawnedAmount = 0;
   }
 
   _createClass(MeteorSpawner, [{
@@ -2958,13 +3017,21 @@ var MeteorSpawner = /*#__PURE__*/function () {
       this.timer.update(delta);
 
       if (this.timer.isFinished()) {
-        if (this.scene.getMeteors().length < this.maxAmount) {
+        var amountAsteroidsInScene = this.scene.getMeteors().length;
+
+        if (amountAsteroidsInScene < this.maxAsteroidsSameTime && this.spawnedAmount < this.maxAsteroids) {
           var meteorView = new _meteorView.MeteorView(0, 0, 50, '0xcc6600', this.pixiStage);
           var position = this.random.getVectorSquare(0, this.scene.mapSize);
           new _meteor.Meteor(meteorView, this.scene, position);
+          this.spawnedAmount++;
           this.timer.reset();
         }
       }
+    }
+  }, {
+    key: "allMeteorsWasDestroyed",
+    value: function allMeteorsWasDestroyed() {
+      return this.spawnedAmount == this.maxAsteroids && this.scene.getMeteors().length == 0;
     }
   }]);
 
@@ -2973,7 +3040,7 @@ var MeteorSpawner = /*#__PURE__*/function () {
 
 exports.MeteorSpawner = MeteorSpawner;
 
-},{"../engine/random":11,"../engine/ticker":12,"../ui/meteor-view":82,"../utils/timer":88,"./meteor":25,"./scene":28,"pixi.js":72}],25:[function(require,module,exports){
+},{"../engine/random":11,"../engine/ticker":12,"../ui/meteor-view":82,"../utils/timer":89,"./game-context":23,"./meteor":25,"./scene":28,"pixi.js":72}],25:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3071,7 +3138,7 @@ var Meteor = /*#__PURE__*/function () {
 
 exports.Meteor = Meteor;
 
-},{"../ui/common/common-view":80,"../utils/vector2":89,"./game-context":23,"./scene":28,"./transform":30}],26:[function(require,module,exports){
+},{"../ui/common/common-view":80,"../utils/vector2":90,"./game-context":23,"./scene":28,"./transform":30}],26:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3227,7 +3294,7 @@ var Planet = /*#__PURE__*/function () {
 
 exports.Planet = Planet;
 
-},{"../input/input":20,"../input/input-player":19,"../ui/button-view":78,"../utils/event-manager":86,"./game-context":23,"./scene":28,"./transform":30,"pixi.js":72}],28:[function(require,module,exports){
+},{"../input/input":20,"../input/input-player":19,"../ui/button-view":78,"../utils/event-manager":87,"./game-context":23,"./scene":28,"./transform":30,"pixi.js":72}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3350,13 +3417,13 @@ var Scene = /*#__PURE__*/function () {
 
 exports.Scene = Scene;
 
-},{"../utils/vector2":89,"./meteor":25,"./planet":27}],29:[function(require,module,exports){
+},{"../utils/vector2":90,"./meteor":25,"./planet":27}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Settings = void 0;
+exports.CameraModeEnum = exports.Settings = void 0;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -3368,9 +3435,23 @@ var Settings = function Settings() {
   _defineProperty(this, "engineFps", 30);
 
   _defineProperty(this, "mapSize", 2000);
+
+  _defineProperty(this, "maxAsteroids", 40);
+
+  _defineProperty(this, "maxAsteroidsSameTime", 20);
+
+  _defineProperty(this, "spawnAsteroidPerSecond", 1);
+
+  _defineProperty(this, "cameraMode", CameraModeEnum.showMap);
 };
 
 exports.Settings = Settings;
+var CameraModeEnum = {
+  showMap: "showMap",
+  showPlayer: "showPlayer",
+  showBot: "showBot"
+};
+exports.CameraModeEnum = CameraModeEnum;
 
 },{}],30:[function(require,module,exports){
 "use strict";
@@ -3447,7 +3528,7 @@ var Transform = /*#__PURE__*/function () {
 
 exports.Transform = Transform;
 
-},{"../utils/math":87,"../utils/vector2":89}],31:[function(require,module,exports){
+},{"../utils/math":88,"../utils/vector2":90}],31:[function(require,module,exports){
 /*!
  * @pixi/accessibility - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -46219,12 +46300,17 @@ var _textView = require("../ui/text-view");
 
 var _resultView = require("../ui/result-view");
 
+var _resultViewSettings = require("../ui/result-view-settings");
+
+var _settings = require("../models/settings");
+
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+//import { ls } from 'shelljs';
 var GameplayService =
 /** 
 * @param {GameContext} context  
@@ -46232,6 +46318,11 @@ var GameplayService =
 function GameplayService(context) {
   _classCallCheck(this, GameplayService);
 
+  var StatesEnum = {
+    GameState: "GameState",
+    MenuState: "MenuState"
+  };
+  var currentState = StatesEnum.GameState;
   this.context = context;
   /** 
   * @type {Application}  
@@ -46260,12 +46351,12 @@ function GameplayService(context) {
 
   var bots = [];
 
-  for (var _i = 0; _i < 10; _i++) {
+  for (var _i = 0; _i < 1; _i++) {
     bots.push(new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random, 'bot' + _i, inputManager));
   }
 
   var collision = new _collisionEngine.CollisionEngine(scene, context.settings.engineFps);
-  var meteorSpawner = new _meteorSpawner.MeteorSpawner(context.random, scene, app.stage, 100, 5);
+  var meteorSpawner = new _meteorSpawner.MeteorSpawner(context, scene);
   new _centerCoordinatesView.CenterCoordinatesView(0, 0, app.stage);
   new _centerCoordinatesView.CenterCoordinatesView(100, null, app.stage);
   new _centerCoordinatesView.CenterCoordinatesView(null, 100, app.stage);
@@ -46276,7 +46367,10 @@ function GameplayService(context) {
   app.stage.addChild(ui);
   var scoreView = new _textView.TextView(0, -450, "123567", ui);
   var button = new _buttonView.Button(450, -450, 100, 100, "☰", "white", ui, function () {
-    new _resultView.ResultView(ui, planet.score, function () {
+    var viewSettings = new _resultViewSettings.ResultViewSettings();
+    viewSettings.playerScore = planet.score;
+    viewSettings.resultViewType = _resultViewSettings.ResultViewType.LevelMenu;
+    new _resultView.ResultView(ui, viewSettings, function () {
       tickers.map(function (t) {
         return t.stop();
       });
@@ -46294,7 +46388,8 @@ function GameplayService(context) {
   tickers.push(new _ticker.Ticker(100, function (delta) {
     var pos = planet.transform.position; //move camera
 
-    app.stage.pivot.set(pos.x, pos.y); //adjust ui container
+    if (context.settings.cameraMode == _settings.CameraModeEnum.showPlayer) app.stage.pivot.set(pos.x, pos.y);
+    if (context.settings.cameraMode == _settings.CameraModeEnum.showMap) app.stage.pivot.set(context.settings.mapSize / 2, context.settings.mapSize / 2); //adjust ui container
 
     ui.x = pos.x;
     ui.y = pos.y;
@@ -46307,8 +46402,36 @@ function GameplayService(context) {
 
   tickers.push(new _ticker.Ticker(context.settings.engineFps, function (delta) {
     bots.map(function (b) {
-      return b.tick(delta);
-    });
+      b.tick(delta);
+      inputManager.addInput(b.getDirection());
+    }); //check score
+
+    if (currentState == StatesEnum.GameState && meteorSpawner.allMeteorsWasDestroyed()) {
+      currentState = StatesEnum.MenuState; // find best player
+
+      var allPlanets = scene.getPlanets();
+      var bestPlanet = allPlanets.reduce(function (bestPLanet, currentPlanet) {
+        if (currentPlanet.score > bestPLanet.score) return currentPlanet;else return bestPLanet;
+      }, allPlanets[0]);
+      var viewSettings = new _resultViewSettings.ResultViewSettings();
+      viewSettings.playerScore = planet.score;
+      viewSettings.resultViewType = _resultViewSettings.ResultViewType.ResultMenu;
+      viewSettings.bestPlayerName = bestPlanet.name;
+      viewSettings.bestPlayerScore = bestPlanet.score;
+      new _resultView.ResultView(ui, viewSettings, function () {
+        tickers.map(function (t) {
+          return t.stop();
+        });
+        context.loadGameplay();
+      }, function () {
+        tickers.map(function (t) {
+          return t.stop();
+        });
+        context.loadMenu();
+      }, function () {
+        currentState = StatesEnum.GameState;
+      });
+    }
   })); // network tick driver
 
   tickers.push(new _ticker.Ticker(20, function (delta) {
@@ -46328,7 +46451,7 @@ stage.pivot.set(myCharacter.x, myCharacter.y); //now character inside stage is m
 
 exports.GameplayService = GameplayService;
 
-},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../input/game-input-driver":15,"../input/input-player":19,"../input/mutable-input-manager":21,"../models/game-context":23,"../models/meteor":25,"../models/meteor-spawner":24,"../models/network/input-message":26,"../models/planet":27,"../models/scene":28,"../ui/button-view":78,"../ui/center-coordinates-view":79,"../ui/meteor-view":82,"../ui/planet-view":83,"../ui/result-view":84,"../ui/text-view":85,"../utils/event-manager":86,"../utils/math":87,"pixi.js":72}],76:[function(require,module,exports){
+},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../input/game-input-driver":15,"../input/input-player":19,"../input/mutable-input-manager":21,"../models/game-context":23,"../models/meteor":25,"../models/meteor-spawner":24,"../models/network/input-message":26,"../models/planet":27,"../models/scene":28,"../models/settings":29,"../ui/button-view":78,"../ui/center-coordinates-view":79,"../ui/meteor-view":82,"../ui/planet-view":83,"../ui/result-view":85,"../ui/result-view-settings":84,"../ui/text-view":86,"../utils/event-manager":87,"../utils/math":88,"pixi.js":72}],76:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46607,7 +46730,7 @@ var CommonView = /*#__PURE__*/function () {
 
 exports.CommonView = CommonView;
 
-},{"../../utils/vector2":89,"pixi.js":72}],81:[function(require,module,exports){
+},{"../../utils/vector2":90,"pixi.js":72}],81:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46771,7 +46894,7 @@ var MeteorView = /*#__PURE__*/function (_CommonView) {
 
 exports.MeteorView = MeteorView;
 
-},{"../utils/vector2":89,"./common/common-view":80,"pixi.js":72}],83:[function(require,module,exports){
+},{"../utils/vector2":90,"./common/common-view":80,"pixi.js":72}],83:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46858,11 +46981,44 @@ exports.PlanetView = PlanetView;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.ResultViewType = exports.ResultViewSettings = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var ResultViewSettings = function ResultViewSettings() {
+  _classCallCheck(this, ResultViewSettings);
+
+  _defineProperty(this, "playerScore", 0);
+
+  _defineProperty(this, "bestPlayerScore", 0);
+
+  _defineProperty(this, "bestPlayerName", "");
+
+  _defineProperty(this, "resultViewType", ResultViewType.LevelMenu);
+};
+
+exports.ResultViewSettings = ResultViewSettings;
+var ResultViewType = {
+  LevelMenu: "LevelMenu",
+  ResultMenu: "ResultMenu"
+};
+exports.ResultViewType = ResultViewType;
+
+},{}],85:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.ResultView = void 0;
 
 var _backgroundView = require("./background-view");
 
 var _buttonView = require("./button-view");
+
+var _resultViewSettings = require("./result-view-settings");
 
 var _textView = require("./text-view");
 
@@ -46880,7 +47036,14 @@ var ResultView =
 * @type {Container}
 * @public
 */
-function ResultView(parent, scoreAmount, restartCallback, mainMenuCallback) {
+
+/** 
+ * @param {Container} parent
+ * @param {ResultViewSettings} settings
+ */
+function ResultView(parent, settings, restartCallback, mainMenuCallback) {
+  var backCallback = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : function () {};
+
   _classCallCheck(this, ResultView);
 
   _defineProperty(this, "container", null);
@@ -46892,8 +47055,23 @@ function ResultView(parent, scoreAmount, restartCallback, mainMenuCallback) {
   container.y = 0;
   parent.addChild(container);
   var back = new _backgroundView.BackgroundView(container);
-  var result = new _textView.TextView(0, -150, "Results", container);
-  var playerResult = new _textView.TextView(0, -50, "Your score: " + scoreAmount, container, 30);
+  var viewTitle = "No title";
+
+  switch (settings.resultViewType) {
+    case _resultViewSettings.ResultViewType.ResultMenu:
+      viewTitle = "Results";
+      break;
+
+    case _resultViewSettings.ResultViewType.LevelMenu:
+      viewTitle = "Level Menu";
+      break;
+  }
+
+  var viewTtile = settings.resultViewType == _resultViewSettings.ResultViewType.ResultMenu;
+  var result = new _textView.TextView(0, -150, viewTitle, container);
+  var playerResult = new _textView.TextView(0, -50, "Your score: " + settings.playerScore, container, 30);
+  var bestPlayerAndScore = settings.bestPlayerName + ' ' + settings.bestPlayerScore;
+  if (settings.resultViewType == _resultViewSettings.ResultViewType.ResultMenu) new _textView.TextView(0, -100, "Best player: " + bestPlayerAndScore, container, 30);
   var buttonRestart = new _buttonView.Button(-120, 150, 100, 100, "restart", "white", container, function () {
     parent.removeChild(container);
     restartCallback();
@@ -46904,12 +47082,13 @@ function ResultView(parent, scoreAmount, restartCallback, mainMenuCallback) {
   });
   var buttonClose = new _buttonView.Button(120, 150, 100, 100, "back", "white", container, function () {
     parent.removeChild(container);
+    backCallback();
   });
 };
 
 exports.ResultView = ResultView;
 
-},{"./background-view":77,"./button-view":78,"./text-view":85,"pixi.js":72}],85:[function(require,module,exports){
+},{"./background-view":77,"./button-view":78,"./result-view-settings":84,"./text-view":86,"pixi.js":72}],86:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46999,7 +47178,7 @@ var TextView = /*#__PURE__*/function () {
 
 exports.TextView = TextView;
 
-},{"pixi.js":72}],86:[function(require,module,exports){
+},{"pixi.js":72}],87:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47049,7 +47228,7 @@ var EventManager = /*#__PURE__*/function () {
 
 exports.EventManager = EventManager;
 
-},{}],87:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47098,7 +47277,7 @@ function isEqual(a, b) {
   return abs(a - b) < epsilon;
 }
 
-},{}],88:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47149,7 +47328,7 @@ var Timer = /*#__PURE__*/function () {
 
 exports.Timer = Timer;
 
-},{}],89:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -47259,4 +47438,4 @@ var Vector2 = /*#__PURE__*/function () {
 
 exports.Vector2 = Vector2;
 
-},{"../utils/math":87}]},{},[9]);
+},{"../utils/math":88}]},{},[9]);

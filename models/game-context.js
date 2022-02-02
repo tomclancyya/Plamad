@@ -67,11 +67,12 @@ export class GameContext {
     }
 
     loadGameplay(){
-        this.camera.setFollowPlayerMode()
+        this.camera.setCameraBySettings()
 
         this.cleanStage()
         new GameplayService(this);
     }
+    
 
     
 }

@@ -23,6 +23,8 @@ export class Bot {
 
     name;
 
+    moveDirection = null;
+
     constructor(pixiStage, scene, fps, random, name, inputManager){
 
         this.name = name;
@@ -34,16 +36,38 @@ export class Bot {
         this.planet = new Planet(planetView.container, scene, fps, name);
 
         let inputConverter = new BotToInputManagerSetter(name, inputManager)
-        this.stateManager = new StateManager(this.planet, scene, inputConverter, random)
 
+        this.stateManager = new StateManager()
+        let states =  
+        [
+            new MovingState(this.stateManager, this.planet, scene, null, random),
+            new SearchAndAttackState(this.stateManager, this.planet, scene, null, random)
+        ]
+
+        this.stateManager.setStates(states)
 
     }
 
     tick(delta) {        
         this.stateManager.tick(delta);
+        this.stateManager.logCurrentState()
     }
 
+    getDirection(){
+        let vector2 = this.stateManager?.currentState?.currentDirection;
 
+        if (!vector2)
+            vector2 = new Vector2()
+
+        let message = new InputInternal(
+            this.name,
+            (vector2.x < -0.2),
+            (vector2.x > 0.2),
+            (vector2.y > 0.2),
+            (vector2.y < -0.2)
+        )
+        return message
+    }
 }
 
 class BotToInputManagerSetter {
@@ -90,14 +114,22 @@ class MovingState {
     update(delta) {
         let planetPosition = this.planet.transform.position
         if (this.planet.transform.isCollideBorder()) {
+
             this.currentDirection = this.random.getVector()
+
+            console.log('[MovingState] border colided, getting random vector: ' + JSON.stringify(this.currentDirection) )
         }
 
-        this.input.addInput(this.currentDirection)
+        //this.input.addInput(this.currentDirection)
         this.previousPosition = planetPosition
         this.timer.update(delta)
 
+
+        console.log('[MovingState] move: ' + JSON.stringify(this.currentDirection) )
+
         if (this.timer.isFinished()) {
+
+        console.log('[MovingState] time is finished, move to another state: SearchAndAttackState ')
             this.stateManager.nextState(StatesEnum.SearchAndAttackState)
         }
     }
@@ -116,7 +148,7 @@ class SearchAndAttackState {
 
     name = StatesEnum.SearchAndAttackState
     currentDirection = null
-    timer = new Timer(5000)
+    timer = new Timer(200)
     random = null
     /**
      * @type {Scene}
@@ -139,22 +171,28 @@ class SearchAndAttackState {
     update(delta) {
 
         if (this.currentDirection) {
-            this.input.addInput(this.currentDirection)
+            //this.input.addInput(JSON.stringify(this.currentDirection))
             this.timer.update(delta)
+            console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection))
         } else {
             let planetPosition = this.planet.transform.position
             let closestMeteor = this.scene.getClosestMeteor(planetPosition, 400)
             if (closestMeteor) {
                 let meteorPosition = closestMeteor.transform.position
                 this.currentDirection = meteorPosition.substract(planetPosition).getNormalized()
+                console.log('[SearchAndAttackState] found new meteor: ' + JSON.stringify(this.currentDirection))
             } else {
+
+                console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState')
                 this.stateManager.nextState(StatesEnum.MovingState)
             }
         }
         
 
         if (this.timer.isFinished()) {
-            //this.stateManager.nextState(StatesEnum.MovingState)
+
+            console.log('[SearchAndAttackState] time is finished, changing state to MovingState')
+            this.stateManager.nextState(StatesEnum.MovingState)
         }
     }
 
@@ -173,13 +211,16 @@ class StateManager {
 
     states = []
     currentState = null
-    constructor(planet, scene, input, random){
-        this.states.push(
-            new MovingState(this, planet, scene, input, random),
-            new SearchAndAttackState(this, planet, scene, input, random)
-        )
+    constructor(){
+    }
 
+    setStates(states){
+        this.states = states
         this.nextState(StatesEnum.MovingState)
+    }   
+
+    logCurrentState() {
+        console.log(this.currentState.name)
     }
 
     tick(delta){

@@ -20,6 +20,9 @@ import { GameInputDriver } from '../input/game-input-driver';
 import { MutableInputManager } from '../input/mutable-input-manager';
 import { TextView } from '../ui/text-view';
 import { ResultView } from '../ui/result-view';
+import { ResultViewSettings, ResultViewType } from '../ui/result-view-settings';
+import { CameraModeEnum } from '../models/settings';
+//import { ls } from 'shelljs';
 
 export class GameplayService {
   
@@ -27,7 +30,13 @@ export class GameplayService {
     * @param {GameContext} context  
     */
     constructor(context){
-        
+
+        const StatesEnum = {
+            GameState: "GameState",
+            MenuState: "MenuState"
+        }
+
+        let currentState = StatesEnum.GameState        
         
         this.context = context;
         /** 
@@ -58,12 +67,12 @@ export class GameplayService {
          * @type {Bot[]}  
          */
         let bots = []
-        for (let i = 0; i < 10; i++){
+        for (let i = 0; i < 1; i++){
             bots.push(new Bot(app.stage, scene, context.settings.engineFps, context.random, 'bot' + i, inputManager))
         }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
-        let meteorSpawner = new MeteorSpawner(context.random, scene, app.stage, 100, 5)
+        let meteorSpawner = new MeteorSpawner(context, scene)
 
         new CenterCoordinatesView(0, 0, app.stage)
         new CenterCoordinatesView(100, null, app.stage)
@@ -78,7 +87,11 @@ export class GameplayService {
         app.stage.addChild(ui);
         let scoreView = new TextView(0, -450, "123567", ui)
         let button = new Button(450, -450, 100, 100, "☰", "white", ui, () => {
-            new ResultView(ui, planet.score, () => {
+            let viewSettings = new ResultViewSettings()
+            viewSettings.playerScore = planet.score
+            viewSettings.resultViewType = ResultViewType.LevelMenu
+
+            new ResultView(ui, viewSettings, () => {
                 tickers.map(t => t.stop())
                 context.loadGameplay()
             }, () => {
@@ -97,7 +110,11 @@ export class GameplayService {
 
         
             //move camera
-            app.stage.pivot.set(pos.x, pos.y);
+            if (context.settings.cameraMode == CameraModeEnum.showPlayer)
+                app.stage.pivot.set(pos.x, pos.y);
+
+            if (context.settings.cameraMode == CameraModeEnum.showMap)
+                app.stage.pivot.set(context.settings.mapSize / 2,context.settings.mapSize / 2);
 
             //adjust ui container
             ui.x = pos.x;
@@ -111,7 +128,41 @@ export class GameplayService {
 
         // tick driver (temporary use simple ticker)
         tickers.push(new Ticker(context.settings.engineFps, (delta) => {
-            bots.map(b => b.tick(delta))
+            bots.map(b => { 
+                b.tick(delta);
+                inputManager.addInput(b.getDirection())
+            })
+
+            //check score
+            if (currentState == StatesEnum.GameState && meteorSpawner.allMeteorsWasDestroyed()){
+                currentState = StatesEnum.MenuState
+
+                // find best player
+                let allPlanets = scene.getPlanets()
+                let bestPlanet = allPlanets.reduce(function (bestPLanet, currentPlanet) {
+                    if (currentPlanet.score > bestPLanet.score)
+                        return currentPlanet
+                    else
+                        return bestPLanet
+        
+                }, allPlanets[0])
+
+                let viewSettings = new ResultViewSettings()
+                viewSettings.playerScore = planet.score
+                viewSettings.resultViewType = ResultViewType.ResultMenu
+                viewSettings.bestPlayerName = bestPlanet.name
+                viewSettings.bestPlayerScore = bestPlanet.score
+
+                new ResultView(ui, viewSettings, () => {
+                    tickers.map(t => t.stop())
+                    context.loadGameplay()
+                }, () => {
+                    tickers.map(t => t.stop())
+                    context.loadMenu()
+                }, () => {
+                    currentState = StatesEnum.GameState
+                },)
+                }
         }))
 
         // network tick driver
