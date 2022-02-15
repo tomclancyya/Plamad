@@ -3,13 +3,12 @@
 /*[production]*/import { Application } from "pixi.js";
 
 import { Random } from "../engine/random";
-import { InputPlayer } from "../input/input-player";
 import { MutableInputManager } from "../input/mutable-input-manager";
 import { GameplayService } from "../stage/gameplay-service";
 import { MenuService } from "../stage/menu-service";
 import { Camera } from "./camera";
 import { Scene } from "./scene";
-import { Settings, settings } from "./settings"
+import { Settings } from "./settings"
 
 export class GameContext {
 

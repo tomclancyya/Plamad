@@ -35,4 +35,9 @@ export class Transform {
         var distance = sphere.getDistance(other)
         return distance < (this.size / 2 + otherTransform.size / 2);
     }
+
+    setSize(size){
+        this.size = size
+        this.move(new Vector2(0,0))
+    }
 }

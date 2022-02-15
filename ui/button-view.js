@@ -1,4 +1,7 @@
-const { Container } = require('pixi.js');
+
+/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
+/*[production]*/import { Container } from "pixi.js";
+
 
 // maybe will help with blurry text
 //PIXI.settings.PRECISION_FRAGMENT = 'highp'; //this makes text looks better

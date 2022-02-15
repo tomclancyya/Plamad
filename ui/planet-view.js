@@ -1,4 +1,6 @@
-const { Container } = require('pixi.js');
+
+/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
+/*[production]*/import { Container } from "pixi.js";
 
 // maybe will help with blurry text
 //PIXI.settings.PRECISION_FRAGMENT = 'highp'; //this makes text looks better
@@ -12,6 +14,9 @@ const { Container } = require('pixi.js');
  * @param {Container} parent
  */
  export class PlanetView {
+
+    circle = null;
+    backgroundColor
 
     /** 
      * @type {Container}
@@ -29,7 +34,7 @@ const { Container } = require('pixi.js');
     */     
     constructor (x, y, diameter, text, backgroundColor = '0x6699ff', parent) {
 
-    let radius = diameter / 2
+    this.backgroundColor = backgroundColor
     let PIXI = require('pixi.js');
     let circle = new PIXI.Graphics();
     let container = new PIXI.Container();
@@ -38,10 +43,9 @@ const { Container } = require('pixi.js');
         //align : 'center'
     })
 
-    circle.beginFill(backgroundColor).lineStyle(5, 'red', 1);    
-    circle.drawCircle(0, 0, radius);
-    circle.endFill();
-    //circle.pivot.set(radius, radius);
+  
+    this.circle = circle;
+    this.setSize(diameter)
 
     let textObject = new PIXI.Text(text, textStyle);
     textObject.anchor.set(0.5)
@@ -59,7 +63,15 @@ const { Container } = require('pixi.js');
     this.delete = function() {
         parent.removeChild(container)
     }
-
-    return this;
 }
+
+    setSize(diameter){
+        let radius = diameter / 2
+        this.circle.beginFill(this.backgroundColor).lineStyle(5, 'red', 1);    
+        this.circle.drawCircle(0, 0, radius);
+        this.circle.endFill();
+    }
+
+
+
 }

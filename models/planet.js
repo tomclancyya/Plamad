@@ -6,6 +6,7 @@ import { Scene } from './scene';
 import { InputPlayer } from '../input/input-player';
 import { Input } from '../input/input';
 import { EventManager } from '../utils/event-manager';
+import { levels } from './planet-level';
 
 export class Planet {
       /** 
@@ -33,6 +34,10 @@ export class Planet {
 
     score = 0;
 
+    level = 1;
+
+    exp = 0;
+
     /** 
     * @param {Scene} scene  
     */
@@ -43,17 +48,19 @@ export class Planet {
         this.name = name;
 
         scene.addPlanet(this)
+
+        this.applyLevelStats()
     }
 
     moveByVector(delta, input) {
-        //console.log(delta)
-        let direction = input.multiValue(delta / 1);
+        let speed = levels.find(l => l.level == this.level).speed
+        let direction = input.multiValue(delta * speed);
         this.transform.move(direction);     
     }
 
     render() {
-        this.view.position.x = this.transform.position.x
-        this.view.position.y = this.transform.position.y
+        this.view.container.position.x = this.transform.position.x
+        this.view.container.position.y = this.transform.position.y
     }
 
     onCollideMeteor(meteor){
@@ -61,6 +68,7 @@ export class Planet {
         if (this.transform.isCollide(meteor.transform)){
             meteor.delete();
             this.score++;
+            this.exp++;
         }
     }
 
@@ -78,7 +86,28 @@ export class Planet {
         this.scene.deletePlanet(this)
     }
 
+    checkForLevelUp(){
+        let expForLevelUp = levels.find(l => l.level == this.level).expForLevelUp
+        let currentExp = this.exp
+        if (expForLevelUp <= currentExp) {
+            console.log("level up!")
+            this.exp = 0
+            this.level = this.level + 1;
+            this.applyLevelStats()
+        }
+    }
+
+    applyLevelStats() {
+        let levelStats = levels.find(l => l.level == this.level)
+        this.transform.setSize(levelStats.size)
+        this.view.setSize(levelStats.size)
+    }
+
     tick() {        
         this.render();   
+    }
+
+    networkTick() {
+        this.checkForLevelUp()
     }
 }

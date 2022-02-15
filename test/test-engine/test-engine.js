@@ -2,7 +2,6 @@ export class TestEngine {
 
     executedLastTest = false
     constructor() {
-        console.log('3')
     }
 
 

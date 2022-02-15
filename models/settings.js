@@ -4,7 +4,7 @@ export class Settings {
     maxAsteroids = 40
     maxAsteroidsSameTime = 20
     spawnAsteroidPerSecond = 1
-    cameraMode = CameraModeEnum.showMap
+    cameraMode = CameraModeEnum.showPlayer
 
     constructor() {}
 }

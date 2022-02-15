@@ -1,56 +1,48 @@
-import { State } from "pixi.js";
-import { Ticker } from "../engine/ticker";
-import { InputMessage } from "../models/network/input-message";
+
+import { GameContext } from "../models/game-context";
 import { Planet } from "../models/planet";
 import { Scene } from "../models/scene";
 import { PlanetView } from "../ui/planet-view";
 import { Timer } from "../utils/timer";
 import { Vector2 } from "../utils/vector2";
-import { Input } from "./input";
-import { InputBot } from "./input-bot";
 import { InputInternal } from "./input-internal";
-import { InputPlayer } from "./input-player";
-import { MutableInputManager } from "./mutable-input-manager";
 
 export class Bot {
 
-    /**
-     * @type {MutableInputManager}
-     */
-    inputManager = null
 
     stateManager = null;
 
-    name;
-
     moveDirection = null;
 
-    constructor(pixiStage, scene, fps, random, name, inputManager){
+    /**
+     * 
+     * @param {GameContext} context  
+     * @param {Planet} context  
+     * @param {Scene} scene 
+     * @param {string} name
+     */
+    constructor(context, scene, planet, name){
 
-        this.name = name;
-        this.inputManager = inputManager;
-
-        this.input = new InputBot()
-
-        let planetView = new PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
-        this.planet = new Planet(planetView.container, scene, fps, name);
-
-        let inputConverter = new BotToInputManagerSetter(name, inputManager)
+        this.name = name
+        let random = context.random
 
         this.stateManager = new StateManager()
+        let searchTimer = new Timer(200)
+        let moveTimer = new Timer(2000)
         let states =  
         [
-            new MovingState(this.stateManager, this.planet, scene, null, random),
-            new SearchAndAttackState(this.stateManager, this.planet, scene, null, random)
+            new MovingState(planet, scene, random, moveTimer),
+            new SearchAndAttackState(planet, scene, random, searchTimer)
         ]
 
         this.stateManager.setStates(states)
+        this.stateManager.nextState(StatesEnum.MovingState)
 
     }
 
     tick(delta) {        
         this.stateManager.tick(delta);
-        this.stateManager.logCurrentState()
+        //this.stateManager.logCurrentState()
     }
 
     getDirection(){
@@ -63,92 +55,65 @@ export class Bot {
             this.name,
             (vector2.x < -0.2),
             (vector2.x > 0.2),
-            (vector2.y > 0.2),
-            (vector2.y < -0.2)
+            (vector2.y < -0.2),
+            (vector2.y > 0.2)
         )
         return message
     }
 }
 
-class BotToInputManagerSetter {
-    constructor (botName, inputManager) {
-        this.botName = botName;
-        this.inputManager = inputManager;
-    }
-
-    addInput(vector2){
-        let message = new InputInternal(
-            this.botName,
-            (vector2.x < -0.2),
-            (vector2.x > 0.2),
-            (vector2.y > 0.2),
-            (vector2.y < -0.2)
-        )
-        this.inputManager.addInput(message)
-    }
-}
-
-class MovingState {
-
-    previousPosition = new Vector2(0, 0)
+export class MovingState {
     name = StatesEnum.MovingState
-    currentDirection = new Vector2(1, 1)
-    timer = new Timer(2000)
+    currentDirection = null
     random = null
+    nextState = null
 
     /**
      * 
-     * @param {*} planet 
+     * @param {Planet} planet 
      * @param {*} scene 
-     * @param {BotToInputManagerSetter} input 
      * @param {*} random 
      */
-    constructor(stateManager, planet, scene, input, random, onNextState) {
+    constructor(planet, scene, random, timer) {
         this.planet = planet
         this.scene = scene
-        this.input = input
         this.random = random
-        this.stateManager = stateManager
+        this.timer = timer
     }
 
     update(delta) {
-        let planetPosition = this.planet.transform.position
         if (this.planet.transform.isCollideBorder()) {
 
             this.currentDirection = this.random.getVector()
 
             console.log('[MovingState] border colided, getting random vector: ' + JSON.stringify(this.currentDirection) )
         }
-
-        //this.input.addInput(this.currentDirection)
-        this.previousPosition = planetPosition
         this.timer.update(delta)
-
-
         console.log('[MovingState] move: ' + JSON.stringify(this.currentDirection) )
 
         if (this.timer.isFinished()) {
 
         console.log('[MovingState] time is finished, move to another state: SearchAndAttackState ')
-            this.stateManager.nextState(StatesEnum.SearchAndAttackState)
+            this.nextState = StatesEnum.SearchAndAttackState
         }
     }
 
     start(){
         this.timer.reset()
         this.currentDirection = this.random.getVector()
+        this.nextState = null
     }
 
     
         
 }
 
-class SearchAndAttackState {
+export class SearchAndAttackState {
 
 
     name = StatesEnum.SearchAndAttackState
+    nextState = null
     currentDirection = null
-    timer = new Timer(200)
     random = null
     /**
      * @type {Scene}
@@ -159,24 +124,21 @@ class SearchAndAttackState {
      */
     planet = null
 
-    constructor(stateManager, planet, scene, input, random) {
+    constructor(planet, scene, random, timer) {
+        this.timer = timer
         this.planet = planet
         this.scene = scene
-        this.input = input
         this.random = random
-        this.currentDirection = random.getVector()
-        this.stateManager = stateManager
     }
 
     update(delta) {
 
-        if (this.currentDirection) {
-            //this.input.addInput(JSON.stringify(this.currentDirection))
-            this.timer.update(delta)
-            console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection))
-        } else {
+        //if (this.currentDirection) {
+        //    this.timer.update(delta)
+        //    console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection))
+        //} else {
             let planetPosition = this.planet.transform.position
-            let closestMeteor = this.scene.getClosestMeteor(planetPosition, 400)
+            let closestMeteor = this.scene.getClosestMeteor(planetPosition, 40000)
             if (closestMeteor) {
                 let meteorPosition = closestMeteor.transform.position
                 this.currentDirection = meteorPosition.substract(planetPosition).getNormalized()
@@ -184,20 +146,21 @@ class SearchAndAttackState {
             } else {
 
                 console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState')
-                this.stateManager.nextState(StatesEnum.MovingState)
+                this.nextState = StatesEnum.MovingState
             }
-        }
+        //}
         
 
         if (this.timer.isFinished()) {
 
-            console.log('[SearchAndAttackState] time is finished, changing state to MovingState')
-            this.stateManager.nextState(StatesEnum.MovingState)
+            //console.log('[SearchAndAttackState] time is finished, changing state to MovingState')
+            //this.stateManager.nextState(StatesEnum.MovingState)
         }
     }
 
     start() {
-        this.currentDirection = null
+        this.currentDirection = null        
+        this.nextState = null
         this.timer.reset()
     }
 }
@@ -207,7 +170,7 @@ const StatesEnum = {
     SearchAndAttackState: "SearchAndAttackState"
 }
 
-class StateManager {
+export class StateManager {
 
     states = []
     currentState = null
@@ -216,7 +179,6 @@ class StateManager {
 
     setStates(states){
         this.states = states
-        this.nextState(StatesEnum.MovingState)
     }   
 
     logCurrentState() {
@@ -224,6 +186,10 @@ class StateManager {
     }
 
     tick(delta){
+        if (this.currentState.nextState)
+        {
+            this.nextState(this.currentState.nextState)
+        }
         this.currentState.update(delta);
     }
 
@@ -233,9 +199,5 @@ class StateManager {
         let nextState = this.states.find(s => s.name == stateName)
         this.currentState = nextState;
         this.currentState.start()
-
-
     }
-
-
 }

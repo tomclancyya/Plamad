@@ -1781,7 +1781,7 @@ var bodyHeight = window.innerHeight;
 var bodyWidth = document.body.clientWidth;
 if (bodyHeight < bodyWidth) canvas.style.height = bodyHeight + 'px';else canvas.style.width = bodyWidth + 'px';
 
-},{"./game.js":13,"./input/input-keyboard.js":18}],10:[function(require,module,exports){
+},{"./game.js":13,"./input/input-keyboard.js":17}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1876,7 +1876,7 @@ var CollisionEngine = /*#__PURE__*/function () {
 
 exports.CollisionEngine = CollisionEngine;
 
-},{"../models/game-context":23,"../models/meteor":25,"../models/planet":27,"../models/scene":28,"./ticker":12}],11:[function(require,module,exports){
+},{"../models/game-context":22,"../models/meteor":24,"../models/planet":26,"../models/scene":27,"./ticker":12}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1940,7 +1940,7 @@ var Random = /*#__PURE__*/function () {
 
 exports.Random = Random;
 
-},{"../utils/vector2":90,"Prando":66}],12:[function(require,module,exports){
+},{"../utils/vector2":90,"Prando":65}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2028,19 +2028,15 @@ module.exports = function (input) {
   return app.view;
 };
 
-},{"./engine/random":11,"./input/mutable-input-manager":21,"./models/game-context":23,"./stage/menu-service":76,"pixi.js":72,"prando":73}],14:[function(require,module,exports){
+},{"./engine/random":11,"./input/mutable-input-manager":20,"./models/game-context":22,"./stage/menu-service":75,"pixi.js":71,"prando":72}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Bot = void 0;
+exports.StateManager = exports.SearchAndAttackState = exports.MovingState = exports.Bot = void 0;
 
-var _pixi = require("pixi.js");
-
-var _ticker = require("../engine/ticker");
-
-var _inputMessage = require("../models/network/input-message");
+var _gameContext = require("../models/game-context");
 
 var _planet = require("../models/planet");
 
@@ -2052,15 +2048,7 @@ var _timer = require("../utils/timer");
 
 var _vector = require("../utils/vector2");
 
-var _input = require("./input");
-
-var _inputBot = require("./input-bot");
-
 var _inputInternal = require("./input-internal");
-
-var _inputPlayer = require("./input-player");
-
-var _mutableInputManager = require("./mutable-input-manager");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2072,35 +2060,33 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var Bot = /*#__PURE__*/function () {
   /**
-   * @type {MutableInputManager}
+   * 
+   * @param {GameContext} context  
+   * @param {Planet} context  
+   * @param {Scene} scene 
+   * @param {string} name
    */
-  function Bot(pixiStage, scene, fps, random, name, inputManager) {
+  function Bot(context, scene, planet, name) {
     _classCallCheck(this, Bot);
 
-    _defineProperty(this, "inputManager", null);
-
     _defineProperty(this, "stateManager", null);
-
-    _defineProperty(this, "name", void 0);
 
     _defineProperty(this, "moveDirection", null);
 
     this.name = name;
-    this.inputManager = inputManager;
-    this.input = new _inputBot.InputBot();
-    var planetView = new _planetView.PlanetView(0, 0, 100, 'bot', '0x6699ff', pixiStage);
-    this.planet = new _planet.Planet(planetView.container, scene, fps, name);
-    var inputConverter = new BotToInputManagerSetter(name, inputManager);
+    var random = context.random;
     this.stateManager = new StateManager();
-    var states = [new MovingState(this.stateManager, this.planet, scene, null, random), new SearchAndAttackState(this.stateManager, this.planet, scene, null, random)];
+    var searchTimer = new _timer.Timer(200);
+    var moveTimer = new _timer.Timer(2000);
+    var states = [new MovingState(planet, scene, random, moveTimer), new SearchAndAttackState(planet, scene, random, searchTimer)];
     this.stateManager.setStates(states);
+    this.stateManager.nextState(StatesEnum.MovingState);
   }
 
   _createClass(Bot, [{
     key: "tick",
     value: function tick(delta) {
-      this.stateManager.tick(delta);
-      this.stateManager.logCurrentState();
+      this.stateManager.tick(delta); //this.stateManager.logCurrentState()
     }
   }, {
     key: "getDirection",
@@ -2109,7 +2095,7 @@ var Bot = /*#__PURE__*/function () {
 
       var vector2 = (_this$stateManager = this.stateManager) === null || _this$stateManager === void 0 ? void 0 : (_this$stateManager$cu = _this$stateManager.currentState) === null || _this$stateManager$cu === void 0 ? void 0 : _this$stateManager$cu.currentDirection;
       if (!vector2) vector2 = new _vector.Vector2();
-      var message = new _inputInternal.InputInternal(this.name, vector2.x < -0.2, vector2.x > 0.2, vector2.y > 0.2, vector2.y < -0.2);
+      var message = new _inputInternal.InputInternal(this.name, vector2.x < -0.2, vector2.x > 0.2, vector2.y < -0.2, vector2.y > 0.2);
       return message;
     }
   }]);
@@ -2119,71 +2105,44 @@ var Bot = /*#__PURE__*/function () {
 
 exports.Bot = Bot;
 
-var BotToInputManagerSetter = /*#__PURE__*/function () {
-  function BotToInputManagerSetter(botName, inputManager) {
-    _classCallCheck(this, BotToInputManagerSetter);
-
-    this.botName = botName;
-    this.inputManager = inputManager;
-  }
-
-  _createClass(BotToInputManagerSetter, [{
-    key: "addInput",
-    value: function addInput(vector2) {
-      var message = new _inputInternal.InputInternal(this.botName, vector2.x < -0.2, vector2.x > 0.2, vector2.y > 0.2, vector2.y < -0.2);
-      this.inputManager.addInput(message);
-    }
-  }]);
-
-  return BotToInputManagerSetter;
-}();
-
 var MovingState = /*#__PURE__*/function () {
   /**
    * 
-   * @param {*} planet 
+   * @param {Planet} planet 
    * @param {*} scene 
-   * @param {BotToInputManagerSetter} input 
    * @param {*} random 
    */
-  function MovingState(stateManager, planet, scene, input, random, onNextState) {
+  function MovingState(planet, scene, random, timer) {
     _classCallCheck(this, MovingState);
-
-    _defineProperty(this, "previousPosition", new _vector.Vector2(0, 0));
 
     _defineProperty(this, "name", StatesEnum.MovingState);
 
-    _defineProperty(this, "currentDirection", new _vector.Vector2(1, 1));
-
-    _defineProperty(this, "timer", new _timer.Timer(2000));
+    _defineProperty(this, "currentDirection", null);
 
     _defineProperty(this, "random", null);
 
+    _defineProperty(this, "nextState", null);
+
     this.planet = planet;
     this.scene = scene;
-    this.input = input;
     this.random = random;
-    this.stateManager = stateManager;
+    this.timer = timer;
   }
 
   _createClass(MovingState, [{
     key: "update",
     value: function update(delta) {
-      var planetPosition = this.planet.transform.position;
-
       if (this.planet.transform.isCollideBorder()) {
         this.currentDirection = this.random.getVector();
         console.log('[MovingState] border colided, getting random vector: ' + JSON.stringify(this.currentDirection));
-      } //this.input.addInput(this.currentDirection)
+      }
 
-
-      this.previousPosition = planetPosition;
       this.timer.update(delta);
       console.log('[MovingState] move: ' + JSON.stringify(this.currentDirection));
 
       if (this.timer.isFinished()) {
         console.log('[MovingState] time is finished, move to another state: SearchAndAttackState ');
-        this.stateManager.nextState(StatesEnum.SearchAndAttackState);
+        this.nextState = StatesEnum.SearchAndAttackState;
       }
     }
   }, {
@@ -2191,11 +2150,14 @@ var MovingState = /*#__PURE__*/function () {
     value: function start() {
       this.timer.reset();
       this.currentDirection = this.random.getVector();
+      this.nextState = null;
     }
   }]);
 
   return MovingState;
 }();
+
+exports.MovingState = MovingState;
 
 var SearchAndAttackState = /*#__PURE__*/function () {
   /**
@@ -2205,14 +2167,14 @@ var SearchAndAttackState = /*#__PURE__*/function () {
   /**
    * @type {Planet}
    */
-  function SearchAndAttackState(stateManager, planet, scene, input, random) {
+  function SearchAndAttackState(planet, scene, random, timer) {
     _classCallCheck(this, SearchAndAttackState);
 
     _defineProperty(this, "name", StatesEnum.SearchAndAttackState);
 
-    _defineProperty(this, "currentDirection", null);
+    _defineProperty(this, "nextState", null);
 
-    _defineProperty(this, "timer", new _timer.Timer(200));
+    _defineProperty(this, "currentDirection", null);
 
     _defineProperty(this, "random", null);
 
@@ -2220,44 +2182,41 @@ var SearchAndAttackState = /*#__PURE__*/function () {
 
     _defineProperty(this, "planet", null);
 
+    this.timer = timer;
     this.planet = planet;
     this.scene = scene;
-    this.input = input;
     this.random = random;
-    this.currentDirection = random.getVector();
-    this.stateManager = stateManager;
   }
 
   _createClass(SearchAndAttackState, [{
     key: "update",
     value: function update(delta) {
-      if (this.currentDirection) {
-        //this.input.addInput(JSON.stringify(this.currentDirection))
-        this.timer.update(delta);
-        console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection));
+      //if (this.currentDirection) {
+      //    this.timer.update(delta)
+      //    console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection))
+      //} else {
+      var planetPosition = this.planet.transform.position;
+      var closestMeteor = this.scene.getClosestMeteor(planetPosition, 40000);
+
+      if (closestMeteor) {
+        var meteorPosition = closestMeteor.transform.position;
+        this.currentDirection = meteorPosition.substract(planetPosition).getNormalized();
+        console.log('[SearchAndAttackState] found new meteor: ' + JSON.stringify(this.currentDirection));
       } else {
-        var planetPosition = this.planet.transform.position;
-        var closestMeteor = this.scene.getClosestMeteor(planetPosition, 400);
+        console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState');
+        this.nextState = StatesEnum.MovingState;
+      } //}
 
-        if (closestMeteor) {
-          var meteorPosition = closestMeteor.transform.position;
-          this.currentDirection = meteorPosition.substract(planetPosition).getNormalized();
-          console.log('[SearchAndAttackState] found new meteor: ' + JSON.stringify(this.currentDirection));
-        } else {
-          console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState');
-          this.stateManager.nextState(StatesEnum.MovingState);
-        }
-      }
 
-      if (this.timer.isFinished()) {
-        console.log('[SearchAndAttackState] time is finished, changing state to MovingState');
-        this.stateManager.nextState(StatesEnum.MovingState);
+      if (this.timer.isFinished()) {//console.log('[SearchAndAttackState] time is finished, changing state to MovingState')
+        //this.stateManager.nextState(StatesEnum.MovingState)
       }
     }
   }, {
     key: "start",
     value: function start() {
       this.currentDirection = null;
+      this.nextState = null;
       this.timer.reset();
     }
   }]);
@@ -2265,6 +2224,7 @@ var SearchAndAttackState = /*#__PURE__*/function () {
   return SearchAndAttackState;
 }();
 
+exports.SearchAndAttackState = SearchAndAttackState;
 var StatesEnum = {
   MovingState: "MovingState",
   SearchAndAttackState: "SearchAndAttackState"
@@ -2283,7 +2243,6 @@ var StateManager = /*#__PURE__*/function () {
     key: "setStates",
     value: function setStates(states) {
       this.states = states;
-      this.nextState(StatesEnum.MovingState);
     }
   }, {
     key: "logCurrentState",
@@ -2293,6 +2252,10 @@ var StateManager = /*#__PURE__*/function () {
   }, {
     key: "tick",
     value: function tick(delta) {
+      if (this.currentState.nextState) {
+        this.nextState(this.currentState.nextState);
+      }
+
       this.currentState.update(delta);
     }
   }, {
@@ -2311,7 +2274,9 @@ var StateManager = /*#__PURE__*/function () {
   return StateManager;
 }();
 
-},{"../engine/ticker":12,"../models/network/input-message":26,"../models/planet":27,"../models/scene":28,"../ui/planet-view":83,"../utils/timer":89,"../utils/vector2":90,"./input":20,"./input-bot":16,"./input-internal":17,"./input-player":19,"./mutable-input-manager":21,"pixi.js":72}],15:[function(require,module,exports){
+exports.StateManager = StateManager;
+
+},{"../models/game-context":22,"../models/planet":26,"../models/scene":27,"../ui/planet-view":82,"../utils/timer":89,"../utils/vector2":90,"./input-internal":16}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2411,77 +2376,7 @@ var GameInputDriver = /*#__PURE__*/function () {
 
 exports.GameInputDriver = GameInputDriver;
 
-},{"../models/planet":27,"../models/scene":28,"../utils/vector2":90,"./input-internal":17,"./mutable-input-manager":21}],16:[function(require,module,exports){
-"use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.InputBot = void 0;
-
-var _vector = require("../utils/vector2");
-
-var _input = require("./input");
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-var InputBot = /*#__PURE__*/function (_Input) {
-  _inherits(InputBot, _Input);
-
-  var _super = _createSuper(InputBot);
-
-  function InputBot() {
-    var _this;
-
-    _classCallCheck(this, InputBot);
-
-    _this = _super.call(this);
-
-    _defineProperty(_assertThisInitialized(_this), "input", new _vector.Vector2(0, 0));
-
-    return _this;
-  }
-
-  _createClass(InputBot, [{
-    key: "setInputDirection",
-    value: function setInputDirection(input) {
-      this.input = input;
-    }
-  }, {
-    key: "getInputDirection",
-    value: function getInputDirection() {
-      return this.input;
-    }
-  }]);
-
-  return InputBot;
-}(_input.Input);
-
-exports.InputBot = InputBot;
-
-},{"../utils/vector2":90,"./input":20}],17:[function(require,module,exports){
+},{"../models/planet":26,"../models/scene":27,"../utils/vector2":90,"./input-internal":16,"./mutable-input-manager":20}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2520,7 +2415,7 @@ function InputInternal(inputId, isLeft, isRight, isUp, isDown) {
 
 exports.InputInternal = InputInternal;
 
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2548,7 +2443,7 @@ var InputKeyboard = function InputKeyboard() {
 
 exports.InputKeyboard = InputKeyboard;
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -2643,7 +2538,7 @@ var InputPlayer = /*#__PURE__*/function (_Input) {
 
 exports.InputPlayer = InputPlayer;
 
-},{"../utils/vector2":90,"./input":20}],20:[function(require,module,exports){
+},{"../utils/vector2":90,"./input":19}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2679,7 +2574,7 @@ var Input = /*#__PURE__*/function () {
 
 exports.Input = Input;
 
-},{"../utils/vector2":90}],21:[function(require,module,exports){
+},{"../utils/vector2":90}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2757,7 +2652,7 @@ var MutableInputManager = /*#__PURE__*/function () {
 
 exports.MutableInputManager = MutableInputManager;
 
-},{"./input-internal":17,"./input-keyboard":18}],22:[function(require,module,exports){
+},{"./input-internal":16,"./input-keyboard":17}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2844,7 +2739,7 @@ var Camera = /*#__PURE__*/function () {
 
 exports.Camera = Camera;
 
-},{"./settings":29,"pixi.js":72}],23:[function(require,module,exports){
+},{"./settings":28,"pixi.js":71}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2855,8 +2750,6 @@ exports.GameContext = void 0;
 var _pixi = require("pixi.js");
 
 var _random = require("../engine/random");
-
-var _inputPlayer = require("../input/input-player");
 
 var _mutableInputManager = require("../input/mutable-input-manager");
 
@@ -2955,7 +2848,7 @@ var GameContext = /*#__PURE__*/function () {
 
 exports.GameContext = GameContext;
 
-},{"../engine/random":11,"../input/input-player":19,"../input/mutable-input-manager":21,"../stage/gameplay-service":75,"../stage/menu-service":76,"./camera":22,"./scene":28,"./settings":29,"pixi.js":72}],24:[function(require,module,exports){
+},{"../engine/random":11,"../input/mutable-input-manager":20,"../stage/gameplay-service":74,"../stage/menu-service":75,"./camera":21,"./scene":27,"./settings":28,"pixi.js":71}],23:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3040,7 +2933,7 @@ var MeteorSpawner = /*#__PURE__*/function () {
 
 exports.MeteorSpawner = MeteorSpawner;
 
-},{"../engine/random":11,"../engine/ticker":12,"../ui/meteor-view":82,"../utils/timer":89,"./game-context":23,"./meteor":25,"./scene":28,"pixi.js":72}],25:[function(require,module,exports){
+},{"../engine/random":11,"../engine/ticker":12,"../ui/meteor-view":81,"../utils/timer":89,"./game-context":22,"./meteor":24,"./scene":27,"pixi.js":71}],24:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3138,40 +3031,48 @@ var Meteor = /*#__PURE__*/function () {
 
 exports.Meteor = Meteor;
 
-},{"../ui/common/common-view":80,"../utils/vector2":90,"./game-context":23,"./scene":28,"./transform":30}],26:[function(require,module,exports){
+},{"../ui/common/common-view":79,"../utils/vector2":90,"./game-context":22,"./scene":27,"./transform":29}],25:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.InputMessage = void 0;
+exports.levels = exports.PlanetLevel = void 0;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var InputMessage =
-/** 
- * @type {boolean}
- * @public
- */
-function InputMessage() {
-  _classCallCheck(this, InputMessage);
+var PlanetLevel = function PlanetLevel() {
+  _classCallCheck(this, PlanetLevel);
 
-  _defineProperty(this, "isLeft", false);
+  _defineProperty(this, "level", 0);
 
-  _defineProperty(this, "isRight", false);
+  _defineProperty(this, "speed", 1);
 
-  _defineProperty(this, "isUp", false);
-
-  _defineProperty(this, "isDown", false);
-
-  _defineProperty(this, "playerName", void 0);
+  _defineProperty(this, "size", 10);
 };
 
-exports.InputMessage = InputMessage;
+exports.PlanetLevel = PlanetLevel;
+var levels = [{
+  level: 1,
+  speed: 1,
+  size: 100,
+  expForLevelUp: 2
+}, {
+  level: 2,
+  speed: 0.8,
+  size: 110,
+  expForLevelUp: 2
+}, {
+  level: 3,
+  speed: 0.6,
+  size: 120,
+  expForLevelUp: 2
+}];
+exports.levels = levels;
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3194,6 +3095,8 @@ var _inputPlayer = require("../input/input-player");
 var _input = require("../input/input");
 
 var _eventManager = require("../utils/event-manager");
+
+var _planetLevel = require("./planet-level");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -3237,25 +3140,35 @@ var Planet = /*#__PURE__*/function () {
 
     _defineProperty(this, "score", 0);
 
+    _defineProperty(this, "level", 1);
+
+    _defineProperty(this, "exp", 0);
+
     this.view = view;
     this.scene = scene;
     this.transform = new _transform.Transform(scene.mapSize);
     this.name = name;
     scene.addPlanet(this);
+    this.applyLevelStats();
   }
 
   _createClass(Planet, [{
     key: "moveByVector",
     value: function moveByVector(delta, input) {
-      //console.log(delta)
-      var direction = input.multiValue(delta / 1);
+      var _this = this;
+
+      var speed = _planetLevel.levels.find(function (l) {
+        return l.level == _this.level;
+      }).speed;
+
+      var direction = input.multiValue(delta * speed);
       this.transform.move(direction);
     }
   }, {
     key: "render",
     value: function render() {
-      this.view.position.x = this.transform.position.x;
-      this.view.position.y = this.transform.position.y;
+      this.view.container.position.x = this.transform.position.x;
+      this.view.container.position.y = this.transform.position.y;
     }
   }, {
     key: "onCollideMeteor",
@@ -3264,6 +3177,7 @@ var Planet = /*#__PURE__*/function () {
       if (this.transform.isCollide(meteor.transform)) {
         meteor["delete"]();
         this.score++;
+        this.exp++;
       }
     }
   }, {
@@ -3283,9 +3197,44 @@ var Planet = /*#__PURE__*/function () {
       this.scene.deletePlanet(this);
     }
   }, {
+    key: "checkForLevelUp",
+    value: function checkForLevelUp() {
+      var _this2 = this;
+
+      var expForLevelUp = _planetLevel.levels.find(function (l) {
+        return l.level == _this2.level;
+      }).expForLevelUp;
+
+      var currentExp = this.exp;
+
+      if (expForLevelUp <= currentExp) {
+        console.log("level up!");
+        this.exp = 0;
+        this.level = this.level + 1;
+        this.applyLevelStats();
+      }
+    }
+  }, {
+    key: "applyLevelStats",
+    value: function applyLevelStats() {
+      var _this3 = this;
+
+      var levelStats = _planetLevel.levels.find(function (l) {
+        return l.level == _this3.level;
+      });
+
+      this.transform.setSize(levelStats.size);
+      this.view.setSize(levelStats.size);
+    }
+  }, {
     key: "tick",
     value: function tick() {
       this.render();
+    }
+  }, {
+    key: "networkTick",
+    value: function networkTick() {
+      this.checkForLevelUp();
     }
   }]);
 
@@ -3294,7 +3243,7 @@ var Planet = /*#__PURE__*/function () {
 
 exports.Planet = Planet;
 
-},{"../input/input":20,"../input/input-player":19,"../ui/button-view":78,"../utils/event-manager":87,"./game-context":23,"./scene":28,"./transform":30,"pixi.js":72}],28:[function(require,module,exports){
+},{"../input/input":19,"../input/input-player":18,"../ui/button-view":77,"../utils/event-manager":87,"./game-context":22,"./planet-level":25,"./scene":27,"./transform":29,"pixi.js":71}],27:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3417,7 +3366,7 @@ var Scene = /*#__PURE__*/function () {
 
 exports.Scene = Scene;
 
-},{"../utils/vector2":90,"./meteor":25,"./planet":27}],29:[function(require,module,exports){
+},{"../utils/vector2":90,"./meteor":24,"./planet":26}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3442,7 +3391,7 @@ var Settings = function Settings() {
 
   _defineProperty(this, "spawnAsteroidPerSecond", 1);
 
-  _defineProperty(this, "cameraMode", CameraModeEnum.showMap);
+  _defineProperty(this, "cameraMode", CameraModeEnum.showPlayer);
 };
 
 exports.Settings = Settings;
@@ -3453,7 +3402,7 @@ var CameraModeEnum = {
 };
 exports.CameraModeEnum = CameraModeEnum;
 
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -3521,6 +3470,12 @@ var Transform = /*#__PURE__*/function () {
       var distance = sphere.getDistance(other);
       return distance < this.size / 2 + otherTransform.size / 2;
     }
+  }, {
+    key: "setSize",
+    value: function setSize(size) {
+      this.size = size;
+      this.move(new _vector.Vector2(0, 0));
+    }
   }]);
 
   return Transform;
@@ -3528,7 +3483,7 @@ var Transform = /*#__PURE__*/function () {
 
 exports.Transform = Transform;
 
-},{"../utils/math":88,"../utils/vector2":90}],31:[function(require,module,exports){
+},{"../utils/math":88,"../utils/vector2":90}],30:[function(require,module,exports){
 /*!
  * @pixi/accessibility - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -4082,7 +4037,7 @@ exports.AccessibilityManager = AccessibilityManager;
 exports.accessibleTarget = accessibleTarget;
 
 
-},{"@pixi/display":36,"@pixi/utils":65}],32:[function(require,module,exports){
+},{"@pixi/display":35,"@pixi/utils":64}],31:[function(require,module,exports){
 /*!
  * @pixi/app - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -4357,7 +4312,7 @@ Application.registerPlugin(ResizePlugin);
 exports.Application = Application;
 
 
-},{"@pixi/core":35,"@pixi/display":36}],33:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/display":35}],32:[function(require,module,exports){
 /*!
  * @pixi/compressed-textures - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -5565,7 +5520,7 @@ exports.TYPES_TO_BYTES_PER_COMPONENT = TYPES_TO_BYTES_PER_COMPONENT;
 exports.TYPES_TO_BYTES_PER_PIXEL = TYPES_TO_BYTES_PER_PIXEL;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/loaders":46,"@pixi/utils":65}],34:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/loaders":45,"@pixi/utils":64}],33:[function(require,module,exports){
 /*!
  * @pixi/constants - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -5756,7 +5711,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 })(exports.BUFFER_TYPE || (exports.BUFFER_TYPE = {}));
 
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
  * @pixi/core - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -18010,7 +17965,7 @@ exports.systems = systems;
 exports.uniformParsers = uniformParsers;
 
 
-},{"@pixi/constants":34,"@pixi/math":47,"@pixi/runner":56,"@pixi/settings":57,"@pixi/ticker":64,"@pixi/utils":65}],36:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/math":46,"@pixi/runner":55,"@pixi/settings":56,"@pixi/ticker":63,"@pixi/utils":64}],35:[function(require,module,exports){
 /*!
  * @pixi/display - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -19988,7 +19943,7 @@ exports.DisplayObject = DisplayObject;
 exports.TemporaryDisplayObject = TemporaryDisplayObject;
 
 
-},{"@pixi/math":47,"@pixi/settings":57,"@pixi/utils":65}],37:[function(require,module,exports){
+},{"@pixi/math":46,"@pixi/settings":56,"@pixi/utils":64}],36:[function(require,module,exports){
 /*!
  * @pixi/extract - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -20207,7 +20162,7 @@ var Extract = /** @class */ (function () {
 exports.Extract = Extract;
 
 
-},{"@pixi/core":35,"@pixi/math":47,"@pixi/utils":65}],38:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/math":46,"@pixi/utils":64}],37:[function(require,module,exports){
 /*!
  * @pixi/filter-alpha - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -20302,7 +20257,7 @@ var AlphaFilter = /** @class */ (function (_super) {
 exports.AlphaFilter = AlphaFilter;
 
 
-},{"@pixi/core":35}],39:[function(require,module,exports){
+},{"@pixi/core":34}],38:[function(require,module,exports){
 /*!
  * @pixi/filter-blur - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -21218,7 +21173,7 @@ exports.BlurFilter = BlurFilter;
 exports.BlurFilterPass = BlurFilterPass;
 
 
-},{"@pixi/core":35,"@pixi/settings":57}],40:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/settings":56}],39:[function(require,module,exports){
 /*!
  * @pixi/filter-color-matrix - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -21776,7 +21731,7 @@ ColorMatrixFilter.prototype.grayscale = ColorMatrixFilter.prototype.greyscale;
 exports.ColorMatrixFilter = ColorMatrixFilter;
 
 
-},{"@pixi/core":35}],41:[function(require,module,exports){
+},{"@pixi/core":34}],40:[function(require,module,exports){
 /*!
  * @pixi/filter-displacement - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -21917,7 +21872,7 @@ var DisplacementFilter = /** @class */ (function (_super) {
 exports.DisplacementFilter = DisplacementFilter;
 
 
-},{"@pixi/core":35,"@pixi/math":47}],42:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/math":46}],41:[function(require,module,exports){
 /*!
  * @pixi/filter-fxaa - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -21987,7 +21942,7 @@ var FXAAFilter = /** @class */ (function (_super) {
 exports.FXAAFilter = FXAAFilter;
 
 
-},{"@pixi/core":35}],43:[function(require,module,exports){
+},{"@pixi/core":34}],42:[function(require,module,exports){
 /*!
  * @pixi/filter-noise - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -22096,7 +22051,7 @@ var NoiseFilter = /** @class */ (function (_super) {
 exports.NoiseFilter = NoiseFilter;
 
 
-},{"@pixi/core":35}],44:[function(require,module,exports){
+},{"@pixi/core":34}],43:[function(require,module,exports){
 /*!
  * @pixi/graphics - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -25147,7 +25102,7 @@ exports.LineStyle = LineStyle;
 exports.graphicsUtils = graphicsUtils;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/display":36,"@pixi/math":47,"@pixi/utils":65}],45:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/display":35,"@pixi/math":46,"@pixi/utils":64}],44:[function(require,module,exports){
 /*!
  * @pixi/interaction - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -27402,7 +27357,7 @@ exports.InteractionTrackingData = InteractionTrackingData;
 exports.interactiveTarget = interactiveTarget;
 
 
-},{"@pixi/display":36,"@pixi/math":47,"@pixi/ticker":64,"@pixi/utils":65}],46:[function(require,module,exports){
+},{"@pixi/display":35,"@pixi/math":46,"@pixi/ticker":63,"@pixi/utils":64}],45:[function(require,module,exports){
 /*!
  * @pixi/loaders - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -29431,7 +29386,7 @@ exports.Loader = Loader;
 exports.TextureLoader = TextureLoader;
 
 
-},{"@pixi/core":35}],47:[function(require,module,exports){
+},{"@pixi/core":34}],46:[function(require,module,exports){
 /*!
  * @pixi/math - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -31318,7 +31273,7 @@ exports.Transform = Transform;
 exports.groupD8 = groupD8;
 
 
-},{}],48:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 /*!
  * @pixi/mesh-extras - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -32071,7 +32026,7 @@ exports.SimplePlane = SimplePlane;
 exports.SimpleRope = SimpleRope;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/mesh":49}],49:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/mesh":48}],48:[function(require,module,exports){
 /*!
  * @pixi/mesh - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -32802,7 +32757,7 @@ exports.MeshGeometry = MeshGeometry;
 exports.MeshMaterial = MeshMaterial;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/display":36,"@pixi/math":47,"@pixi/settings":57,"@pixi/utils":65}],50:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/display":35,"@pixi/math":46,"@pixi/settings":56,"@pixi/utils":64}],49:[function(require,module,exports){
 /*!
  * @pixi/mixin-cache-as-bitmap - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -33714,7 +33669,7 @@ display.DisplayObject.prototype._cacheAsBitmapDestroy = function _cacheAsBitmapD
 exports.CacheData = CacheData;
 
 
-},{"@pixi/core":35,"@pixi/display":36,"@pixi/math":47,"@pixi/settings":57,"@pixi/sprite":60,"@pixi/utils":65}],51:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/display":35,"@pixi/math":46,"@pixi/settings":56,"@pixi/sprite":59,"@pixi/utils":64}],50:[function(require,module,exports){
 /*!
  * @pixi/mixin-get-child-by-name - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -33766,7 +33721,7 @@ display.Container.prototype.getChildByName = function getChildByName(name, deep)
 };
 
 
-},{"@pixi/display":36}],52:[function(require,module,exports){
+},{"@pixi/display":35}],51:[function(require,module,exports){
 /*!
  * @pixi/mixin-get-global-position - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -33804,7 +33759,7 @@ display.DisplayObject.prototype.getGlobalPosition = function getGlobalPosition(p
 };
 
 
-},{"@pixi/display":36,"@pixi/math":47}],53:[function(require,module,exports){
+},{"@pixi/display":35,"@pixi/math":46}],52:[function(require,module,exports){
 /*!
  * @pixi/particle-container - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -34621,7 +34576,7 @@ exports.ParticleContainer = ParticleContainer;
 exports.ParticleRenderer = ParticleRenderer;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/display":36,"@pixi/math":47,"@pixi/utils":65}],54:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/display":35,"@pixi/math":46,"@pixi/utils":64}],53:[function(require,module,exports){
 /*!
  * @pixi/polyfill - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -34740,7 +34695,7 @@ if (!self.Int32Array) {
 }
 
 
-},{"object-assign":71,"promise-polyfill":74}],55:[function(require,module,exports){
+},{"object-assign":70,"promise-polyfill":73}],54:[function(require,module,exports){
 /*!
  * @pixi/prepare - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -35383,7 +35338,7 @@ exports.Prepare = Prepare;
 exports.TimeLimiter = TimeLimiter;
 
 
-},{"@pixi/core":35,"@pixi/display":36,"@pixi/graphics":44,"@pixi/settings":57,"@pixi/text":63,"@pixi/ticker":64}],56:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/display":35,"@pixi/graphics":43,"@pixi/settings":56,"@pixi/text":62,"@pixi/ticker":63}],55:[function(require,module,exports){
 /*!
  * @pixi/runner - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -35587,7 +35542,7 @@ Object.defineProperties(Runner.prototype, {
 exports.Runner = Runner;
 
 
-},{}],57:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 /*!
  * @pixi/settings - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -36402,7 +36357,7 @@ exports.isMobile = isMobile;
 exports.settings = settings;
 
 
-},{"ismobilejs":69}],58:[function(require,module,exports){
+},{"ismobilejs":68}],57:[function(require,module,exports){
 /*!
  * @pixi/sprite-animated - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -36879,7 +36834,7 @@ var AnimatedSprite = /** @class */ (function (_super) {
 exports.AnimatedSprite = AnimatedSprite;
 
 
-},{"@pixi/core":35,"@pixi/sprite":60,"@pixi/ticker":64}],59:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/sprite":59,"@pixi/ticker":63}],58:[function(require,module,exports){
 /*!
  * @pixi/sprite-tiling - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -37295,7 +37250,7 @@ exports.TilingSprite = TilingSprite;
 exports.TilingSpriteRenderer = TilingSpriteRenderer;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/math":47,"@pixi/sprite":60,"@pixi/utils":65}],60:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/math":46,"@pixi/sprite":59,"@pixi/utils":64}],59:[function(require,module,exports){
 /*!
  * @pixi/sprite - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -37890,7 +37845,7 @@ var Sprite = /** @class */ (function (_super) {
 exports.Sprite = Sprite;
 
 
-},{"@pixi/constants":34,"@pixi/core":35,"@pixi/display":36,"@pixi/math":47,"@pixi/settings":57,"@pixi/utils":65}],61:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/core":34,"@pixi/display":35,"@pixi/math":46,"@pixi/settings":56,"@pixi/utils":64}],60:[function(require,module,exports){
 /*!
  * @pixi/spritesheet - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -38290,7 +38245,7 @@ exports.Spritesheet = Spritesheet;
 exports.SpritesheetLoader = SpritesheetLoader;
 
 
-},{"@pixi/core":35,"@pixi/loaders":46,"@pixi/math":47,"@pixi/utils":65}],62:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/loaders":45,"@pixi/math":46,"@pixi/utils":64}],61:[function(require,module,exports){
 /*!
  * @pixi/text-bitmap - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -40076,7 +40031,7 @@ exports.BitmapFontLoader = BitmapFontLoader;
 exports.BitmapText = BitmapText;
 
 
-},{"@pixi/core":35,"@pixi/display":36,"@pixi/loaders":46,"@pixi/math":47,"@pixi/mesh":49,"@pixi/settings":57,"@pixi/text":63,"@pixi/utils":65}],63:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/display":35,"@pixi/loaders":45,"@pixi/math":46,"@pixi/mesh":48,"@pixi/settings":56,"@pixi/text":62,"@pixi/utils":64}],62:[function(require,module,exports){
 /*!
  * @pixi/text - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -42176,7 +42131,7 @@ exports.TextMetrics = TextMetrics;
 exports.TextStyle = TextStyle;
 
 
-},{"@pixi/core":35,"@pixi/math":47,"@pixi/settings":57,"@pixi/sprite":60,"@pixi/utils":65}],64:[function(require,module,exports){
+},{"@pixi/core":34,"@pixi/math":46,"@pixi/settings":56,"@pixi/sprite":59,"@pixi/utils":64}],63:[function(require,module,exports){
 /*!
  * @pixi/ticker - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -42929,7 +42884,7 @@ exports.Ticker = Ticker;
 exports.TickerPlugin = TickerPlugin;
 
 
-},{"@pixi/settings":57}],65:[function(require,module,exports){
+},{"@pixi/settings":56}],64:[function(require,module,exports){
 /*!
  * @pixi/utils - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -44167,7 +44122,7 @@ exports.uid = uid;
 exports.url = url;
 
 
-},{"@pixi/constants":34,"@pixi/settings":57,"earcut":67,"eventemitter3":68,"url":7}],66:[function(require,module,exports){
+},{"@pixi/constants":33,"@pixi/settings":56,"earcut":66,"eventemitter3":67,"url":7}],65:[function(require,module,exports){
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
@@ -44351,7 +44306,7 @@ exports.url = url;
 })));
 module.exports.default = module.exports; // Terrible injection just so it works regardless of how it's required
 
-},{}],67:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 'use strict';
 
 module.exports = earcut;
@@ -45037,7 +44992,7 @@ earcut.flatten = function (data) {
     return result;
 };
 
-},{}],68:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty
@@ -45375,7 +45330,7 @@ if ('undefined' !== typeof module) {
   module.exports = EventEmitter;
 }
 
-},{}],69:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -45385,7 +45340,7 @@ __export(require("./isMobile"));
 var isMobile_1 = require("./isMobile");
 exports["default"] = isMobile_1["default"];
 
-},{"./isMobile":70}],70:[function(require,module,exports){
+},{"./isMobile":69}],69:[function(require,module,exports){
 "use strict";
 exports.__esModule = true;
 var appleIphone = /iPhone/i;
@@ -45514,7 +45469,7 @@ function isMobile(param) {
 }
 exports["default"] = isMobile;
 
-},{}],71:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -45606,7 +45561,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],72:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 /*!
  * pixi.js - v6.1.2
  * Compiled Thu, 12 Aug 2021 17:11:19 UTC
@@ -45918,9 +45873,9 @@ exports.VERSION = VERSION;
 exports.filters = filters;
 
 
-},{"@pixi/accessibility":31,"@pixi/app":32,"@pixi/compressed-textures":33,"@pixi/constants":34,"@pixi/core":35,"@pixi/display":36,"@pixi/extract":37,"@pixi/filter-alpha":38,"@pixi/filter-blur":39,"@pixi/filter-color-matrix":40,"@pixi/filter-displacement":41,"@pixi/filter-fxaa":42,"@pixi/filter-noise":43,"@pixi/graphics":44,"@pixi/interaction":45,"@pixi/loaders":46,"@pixi/math":47,"@pixi/mesh":49,"@pixi/mesh-extras":48,"@pixi/mixin-cache-as-bitmap":50,"@pixi/mixin-get-child-by-name":51,"@pixi/mixin-get-global-position":52,"@pixi/particle-container":53,"@pixi/polyfill":54,"@pixi/prepare":55,"@pixi/runner":56,"@pixi/settings":57,"@pixi/sprite":60,"@pixi/sprite-animated":58,"@pixi/sprite-tiling":59,"@pixi/spritesheet":61,"@pixi/text":63,"@pixi/text-bitmap":62,"@pixi/ticker":64,"@pixi/utils":65}],73:[function(require,module,exports){
-arguments[4][66][0].apply(exports,arguments)
-},{"dup":66}],74:[function(require,module,exports){
+},{"@pixi/accessibility":30,"@pixi/app":31,"@pixi/compressed-textures":32,"@pixi/constants":33,"@pixi/core":34,"@pixi/display":35,"@pixi/extract":36,"@pixi/filter-alpha":37,"@pixi/filter-blur":38,"@pixi/filter-color-matrix":39,"@pixi/filter-displacement":40,"@pixi/filter-fxaa":41,"@pixi/filter-noise":42,"@pixi/graphics":43,"@pixi/interaction":44,"@pixi/loaders":45,"@pixi/math":46,"@pixi/mesh":48,"@pixi/mesh-extras":47,"@pixi/mixin-cache-as-bitmap":49,"@pixi/mixin-get-child-by-name":50,"@pixi/mixin-get-global-position":51,"@pixi/particle-container":52,"@pixi/polyfill":53,"@pixi/prepare":54,"@pixi/runner":55,"@pixi/settings":56,"@pixi/sprite":59,"@pixi/sprite-animated":57,"@pixi/sprite-tiling":58,"@pixi/spritesheet":60,"@pixi/text":62,"@pixi/text-bitmap":61,"@pixi/ticker":63,"@pixi/utils":64}],72:[function(require,module,exports){
+arguments[4][65][0].apply(exports,arguments)
+},{"dup":65}],73:[function(require,module,exports){
 (function (setImmediate){(function (){
 'use strict';
 
@@ -46248,10 +46203,8 @@ Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
 module.exports = Promise;
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"timers":6}],75:[function(require,module,exports){
+},{"timers":6}],74:[function(require,module,exports){
 "use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -46264,15 +46217,9 @@ var _buttonView = require("../ui/button-view");
 
 var _gameContext = require("../models/game-context");
 
-var _planet = require("../models/planet");
+var _planet2 = require("../models/planet");
 
-var M = _interopRequireWildcard(require("../utils/math"));
-
-var _planetView = require("../ui/planet-view");
-
-var _meteorView = require("../ui/meteor-view");
-
-var _meteor = require("../models/meteor");
+var _planetView2 = require("../ui/planet-view");
 
 var _centerCoordinatesView = require("../ui/center-coordinates-view");
 
@@ -46288,13 +46235,7 @@ var _eventManager = require("../utils/event-manager");
 
 var _ticker = require("../engine/ticker");
 
-var _inputPlayer = require("../input/input-player");
-
-var _inputMessage = require("../models/network/input-message");
-
 var _gameInputDriver = require("../input/game-input-driver");
-
-var _mutableInputManager = require("../input/mutable-input-manager");
 
 var _textView = require("../ui/text-view");
 
@@ -46304,13 +46245,8 @@ var _resultViewSettings = require("../ui/result-view-settings");
 
 var _settings = require("../models/settings");
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-//import { ls } from 'shelljs';
 var GameplayService =
 /** 
 * @param {GameContext} context  
@@ -46343,16 +46279,23 @@ function GameplayService(context) {
 
   var eventTick = new _eventManager.EventManager();
   var scene = new _scene.Scene(context.settings.mapSize);
-  var planetView = new _planetView.PlanetView(0, 0, 100, 'player1', '0x6699ff', app.stage);
-  var planet = new _planet.Planet(planetView.container, scene, context.settings.engineFps, 'player1');
+  var planetView = new _planetView2.PlanetView(0, 0, 100, 'player1', '0x6699ff', app.stage);
+  var planet = new _planet2.Planet(planetView, scene, context.settings.engineFps, 'player1');
   /**
    * @type {Bot[]}  
    */
 
   var bots = [];
 
-  for (var _i = 0; _i < 1; _i++) {
-    bots.push(new _bot.Bot(app.stage, scene, context.settings.engineFps, context.random, 'bot' + _i, inputManager));
+  for (var _i = 0; _i < 0; _i++) {
+    var botName = 'bot' + _i;
+
+    var _planetView = new _planetView2.PlanetView(0, 0, 100, botName, '0x6699ff', context.app.stage);
+
+    var _planet = new _planet2.Planet(_planetView.container, scene, null, botName);
+
+    var bot = new _bot.Bot(context, scene, _planet, botName);
+    bots.push(bot);
   }
 
   var collision = new _collisionEngine.CollisionEngine(scene, context.settings.engineFps);
@@ -46438,6 +46381,9 @@ function GameplayService(context) {
     inputDriver.networkTick(delta);
     collision.isPlanetCollidesMeteor();
     meteorSpawner.networkUpdate(delta);
+    scene.getPlanets().map(function (planet) {
+      planet.networkTick();
+    });
   }));
 };
 /*
@@ -46451,7 +46397,7 @@ stage.pivot.set(myCharacter.x, myCharacter.y); //now character inside stage is m
 
 exports.GameplayService = GameplayService;
 
-},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../input/game-input-driver":15,"../input/input-player":19,"../input/mutable-input-manager":21,"../models/game-context":23,"../models/meteor":25,"../models/meteor-spawner":24,"../models/network/input-message":26,"../models/planet":27,"../models/scene":28,"../models/settings":29,"../ui/button-view":78,"../ui/center-coordinates-view":79,"../ui/meteor-view":82,"../ui/planet-view":83,"../ui/result-view":85,"../ui/result-view-settings":84,"../ui/text-view":86,"../utils/event-manager":87,"../utils/math":88,"pixi.js":72}],76:[function(require,module,exports){
+},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../input/game-input-driver":15,"../models/game-context":22,"../models/meteor-spawner":23,"../models/planet":26,"../models/scene":27,"../models/settings":28,"../ui/button-view":77,"../ui/center-coordinates-view":78,"../ui/planet-view":82,"../ui/result-view":84,"../ui/result-view-settings":83,"../ui/text-view":85,"../utils/event-manager":87,"pixi.js":71}],75:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46459,17 +46405,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.MenuService = void 0;
 
+var _pixi = require("pixi.js");
+
 var _gameContext = require("../models/game-context");
 
 var _gameplayService = require("./gameplay-service");
 
+var _menuView = require("../ui/menu-view");
+
+var _settings = require("../models/settings");
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _require = require('pixi.js'),
-    Application = _require.Application;
-
-var _require2 = require('../ui/menu-view'),
-    MenuView = _require2.MenuView;
 
 var MenuService =
 /** 
@@ -46478,14 +46424,18 @@ var MenuService =
 function MenuService(context) {
   _classCallCheck(this, MenuService);
 
-  new MenuView(context, function () {
+  new _menuView.MenuView(context, function () {
+    context.settings.cameraMode = _settings.CameraModeEnum.showPlayer;
     context.loadGameplay();
-  }, function () {}, function () {}, function () {});
+  }, function () {
+    context.settings.cameraMode = _settings.CameraModeEnum.showMap;
+    context.loadGameplay();
+  }, function () {}, function () {});
 };
 
 exports.MenuService = MenuService;
 
-},{"../models/game-context":23,"../ui/menu-view":81,"./gameplay-service":75,"pixi.js":72}],77:[function(require,module,exports){
+},{"../models/game-context":22,"../models/settings":28,"../ui/menu-view":80,"./gameplay-service":74,"pixi.js":71}],76:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46512,7 +46462,7 @@ var BackgroundView = function BackgroundView(parent) {
 
 exports.BackgroundView = BackgroundView;
 
-},{"pixi.js":72}],78:[function(require,module,exports){
+},{"pixi.js":71}],77:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46520,12 +46470,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Button = void 0;
 
+var _pixi = require("pixi.js");
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var _require = require('pixi.js'),
-    Container = _require.Container; // maybe will help with blurry text
+// maybe will help with blurry text
 //PIXI.settings.PRECISION_FRAGMENT = 'highp'; //this makes text looks better
 //this.renderer = PIXI.autoDetectRenderer(845, 451, { antialias: false, transparent: true });      
 //this.renderer.roundPixels = true; //and this too
@@ -46536,8 +46487,6 @@ var _require = require('pixi.js'),
  * @param {string} text
  * @param {Container} parent
  */
-
-
 var Button =
 /** 
  * @type {Container}
@@ -46588,7 +46537,7 @@ function Button(x, y, width, height, text) {
 
 exports.Button = Button;
 
-},{"pixi.js":72}],79:[function(require,module,exports){
+},{"pixi.js":71}],78:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46596,20 +46545,18 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CenterCoordinatesView = void 0;
 
+var _pixi = require("pixi.js");
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var _require = require('pixi.js'),
-    Container = _require.Container;
 /**
  * @param {number} radius
  * @param {number} height
  * @param {string} text
  * @param {Container} parent
  */
-
-
 var CenterCoordinatesView =
 /** 
  * @type {Container}
@@ -46673,7 +46620,7 @@ function CenterCoordinatesView(x, y, parent) {
 
 exports.CenterCoordinatesView = CenterCoordinatesView;
 
-},{"pixi.js":72}],80:[function(require,module,exports){
+},{"pixi.js":71}],79:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46730,13 +46677,19 @@ var CommonView = /*#__PURE__*/function () {
 
 exports.CommonView = CommonView;
 
-},{"../../utils/vector2":90,"pixi.js":72}],81:[function(require,module,exports){
+},{"../../utils/vector2":90,"pixi.js":71}],80:[function(require,module,exports){
 "use strict";
+/*[test]*/
+//import pixi from "pixi-shim"; const { Application } = pixi;
+
+/*[production]*/
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.MenuView = void 0;
+
+var _pixi = require("pixi.js");
 
 var _buttonView = require("./button-view");
 
@@ -46748,9 +46701,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var _require = require("pixi.js"),
-    Application = _require.Application;
-
+//const { Application } = require("pixi.js");
 var MenuView = /*#__PURE__*/function () {
   /**
    * Represents a app.
@@ -46794,7 +46745,7 @@ var MenuView = /*#__PURE__*/function () {
 
 exports.MenuView = MenuView;
 
-},{"../models/game-context":23,"./button-view":78,"pixi.js":72}],82:[function(require,module,exports){
+},{"../models/game-context":22,"./button-view":77,"pixi.js":71}],81:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -46803,6 +46754,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.MeteorView = void 0;
+
+var _pixi = require("pixi.js");
 
 var _vector = require("../utils/vector2");
 
@@ -46823,9 +46776,6 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-var _require = require('pixi.js'),
-    Container = _require.Container;
 
 var MeteorView = /*#__PURE__*/function (_CommonView) {
   _inherits(MeteorView, _CommonView);
@@ -46894,7 +46844,7 @@ var MeteorView = /*#__PURE__*/function (_CommonView) {
 
 exports.MeteorView = MeteorView;
 
-},{"../utils/vector2":90,"./common/common-view":80,"pixi.js":72}],83:[function(require,module,exports){
+},{"../utils/vector2":90,"./common/common-view":79,"pixi.js":71}],82:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46902,12 +46852,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PlanetView = void 0;
 
+var _pixi = require("pixi.js");
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var _require = require('pixi.js'),
-    Container = _require.Container; // maybe will help with blurry text
+// maybe will help with blurry text
 //PIXI.settings.PRECISION_FRAGMENT = 'highp'; //this makes text looks better
 //this.renderer = PIXI.autoDetectRenderer(845, 451, { antialias: false, transparent: true });      
 //this.renderer.roundPixels = true; //and this too
@@ -46918,64 +46873,75 @@ var _require = require('pixi.js'),
  * @param {string} text
  * @param {Container} parent
  */
+var PlanetView = /*#__PURE__*/function () {
+  /** 
+   * @type {Container}
+   * @public
+   */
 
+  /** 
+  * @param {number} x
+  * @param {number} y  
+  * @param {number} diameter 
+  * @param {string} text 
+  * @param {string} backgroundColor 
+  * @param {Container} parent 
+  */
+  function PlanetView(x, y, diameter, text) {
+    var backgroundColor = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '0x6699ff';
+    var parent = arguments.length > 5 ? arguments[5] : undefined;
 
-var PlanetView =
-/** 
- * @type {Container}
- * @public
- */
+    _classCallCheck(this, PlanetView);
 
-/** 
-* @param {number} x
-* @param {number} y  
-* @param {number} diameter 
-* @param {string} text 
-* @param {string} backgroundColor 
-* @param {Container} parent 
-*/
-function PlanetView(x, y, diameter, text) {
-  var backgroundColor = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '0x6699ff';
-  var parent = arguments.length > 5 ? arguments[5] : undefined;
+    _defineProperty(this, "circle", null);
 
-  _classCallCheck(this, PlanetView);
+    _defineProperty(this, "backgroundColor", void 0);
 
-  _defineProperty(this, "container", null);
+    _defineProperty(this, "container", null);
 
-  var radius = diameter / 2;
+    this.backgroundColor = backgroundColor;
 
-  var PIXI = require('pixi.js');
+    var PIXI = require('pixi.js');
 
-  var circle = new PIXI.Graphics();
-  var container = new PIXI.Container();
-  var textStyle = new PIXI.TextStyle({
-    fill: 'white' //align : 'center'
+    var circle = new PIXI.Graphics();
+    var container = new PIXI.Container();
+    var textStyle = new PIXI.TextStyle({
+      fill: 'white' //align : 'center'
 
-  });
-  circle.beginFill(backgroundColor).lineStyle(5, 'red', 1);
-  circle.drawCircle(0, 0, radius);
-  circle.endFill(); //circle.pivot.set(radius, radius);
+    });
+    this.circle = circle;
+    this.setSize(diameter);
+    var textObject = new PIXI.Text(text, textStyle);
+    textObject.anchor.set(0.5);
+    textObject.resolution = 4;
+    container.addChild(circle);
+    container.addChild(textObject);
+    parent.addChild(container);
+    container.x = x;
+    container.y = y;
+    this.container = container;
 
-  var textObject = new PIXI.Text(text, textStyle);
-  textObject.anchor.set(0.5);
-  textObject.resolution = 4;
-  container.addChild(circle);
-  container.addChild(textObject);
-  parent.addChild(container);
-  container.x = x;
-  container.y = y;
-  this.container = container;
+    this["delete"] = function () {
+      parent.removeChild(container);
+    };
+  }
 
-  this["delete"] = function () {
-    parent.removeChild(container);
-  };
+  _createClass(PlanetView, [{
+    key: "setSize",
+    value: function setSize(diameter) {
+      var radius = diameter / 2;
+      this.circle.beginFill(this.backgroundColor).lineStyle(5, 'red', 1);
+      this.circle.drawCircle(0, 0, radius);
+      this.circle.endFill();
+    }
+  }]);
 
-  return this;
-};
+  return PlanetView;
+}();
 
 exports.PlanetView = PlanetView;
 
-},{"pixi.js":72}],84:[function(require,module,exports){
+},{"pixi.js":71}],83:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47006,7 +46972,7 @@ var ResultViewType = {
 };
 exports.ResultViewType = ResultViewType;
 
-},{}],85:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47088,13 +47054,15 @@ function ResultView(parent, settings, restartCallback, mainMenuCallback) {
 
 exports.ResultView = ResultView;
 
-},{"./background-view":77,"./button-view":78,"./result-view-settings":84,"./text-view":86,"pixi.js":72}],86:[function(require,module,exports){
+},{"./background-view":76,"./button-view":77,"./result-view-settings":83,"./text-view":85,"pixi.js":71}],85:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.TextView = void 0;
+
+var _pixi = require("pixi.js");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -47104,11 +47072,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var _require = require('pixi.js'),
-    Container = _require.Container;
-
-var _require2 = require('pixi.js'),
-    Text = _require2.Text; // maybe will help with blurry text
+// maybe will help with blurry text
 //PIXI.settings.PRECISION_FRAGMENT = 'highp'; //this makes text looks better
 //this.renderer = PIXI.autoDetectRenderer(845, 451, { antialias: false, transparent: true });      
 //this.renderer.roundPixels = true; //and this too
@@ -47119,8 +47083,6 @@ var _require2 = require('pixi.js'),
  * @param {string} text
  * @param {Container} parent
  */
-
-
 var TextView = /*#__PURE__*/function () {
   /** 
    * @type {Container}
@@ -47178,7 +47140,52 @@ var TextView = /*#__PURE__*/function () {
 
 exports.TextView = TextView;
 
-},{"pixi.js":72}],87:[function(require,module,exports){
+},{"pixi.js":71}],86:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BaseTimer = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+/**
+ * @interface
+ */
+var BaseTimer = /*#__PURE__*/function () {
+  // ms
+  function BaseTimer(timeout) {
+    _classCallCheck(this, BaseTimer);
+  }
+
+  _createClass(BaseTimer, [{
+    key: "update",
+    value: function update(delta) {
+      console.log("not implemented");
+    }
+  }, {
+    key: "isFinished",
+    value: function isFinished() {
+      console.log("not implemented");
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      console.log("not implemented");
+    }
+  }]);
+
+  return BaseTimer;
+}();
+
+exports.BaseTimer = BaseTimer;
+
+},{}],87:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47280,10 +47287,14 @@ function isEqual(a, b) {
 },{}],89:[function(require,module,exports){
 "use strict";
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Timer = void 0;
+
+var _baseTimer = require("./base-timer");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -47291,19 +47302,43 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var Timer = /*#__PURE__*/function () {
+var Timer = /*#__PURE__*/function (_BaseTimer) {
+  _inherits(Timer, _BaseTimer);
+
+  var _super = _createSuper(Timer);
+
   // ms
   function Timer(timeout) {
+    var _this;
+
     _classCallCheck(this, Timer);
 
-    _defineProperty(this, "timeout", void 0);
+    _this = _super.call(this, timeout); // без этой строчки кидает undefined is not an object
 
-    _defineProperty(this, "currentTime", void 0);
+    _defineProperty(_assertThisInitialized(_this), "timeout", null);
 
-    this.timeout = timeout;
-    this.currentTime = timeout;
+    _defineProperty(_assertThisInitialized(_this), "currentTime", null);
+
+    _this.timeout = timeout;
+    _this.currentTime = timeout; //super(timeout)
+
+    return _this;
   }
 
   _createClass(Timer, [{
@@ -47324,11 +47359,11 @@ var Timer = /*#__PURE__*/function () {
   }]);
 
   return Timer;
-}();
+}(_baseTimer.BaseTimer);
 
 exports.Timer = Timer;
 
-},{}],90:[function(require,module,exports){
+},{"./base-timer":86}],90:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }

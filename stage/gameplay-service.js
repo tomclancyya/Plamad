@@ -3,10 +3,7 @@ import { Container } from 'pixi.js';
 import { Button } from '../ui/button-view';
 import { GameContext } from '../models/game-context';
 import { Planet } from '../models/planet';
-import * as M from '../utils/math';
 import { PlanetView } from '../ui/planet-view';
-import { MeteorView } from '../ui/meteor-view';
-import { Meteor } from '../models/meteor';
 import { CenterCoordinatesView } from '../ui/center-coordinates-view';
 import { CollisionEngine } from '../engine/collision-engine';
 import { Scene } from '../models/scene';
@@ -14,15 +11,11 @@ import { MeteorSpawner } from '../models/meteor-spawner';
 import { Bot } from '../input/bot';
 import { EventManager } from '../utils/event-manager';
 import { Ticker } from '../engine/ticker';
-import { InputPlayer } from '../input/input-player';
-import { InputMessage } from '../models/network/input-message';
 import { GameInputDriver } from '../input/game-input-driver';
-import { MutableInputManager } from '../input/mutable-input-manager';
 import { TextView } from '../ui/text-view';
 import { ResultView } from '../ui/result-view';
 import { ResultViewSettings, ResultViewType } from '../ui/result-view-settings';
 import { CameraModeEnum } from '../models/settings';
-//import { ls } from 'shelljs';
 
 export class GameplayService {
   
@@ -61,14 +54,18 @@ export class GameplayService {
         let scene = new Scene(context.settings.mapSize);
 
         let planetView = new PlanetView(0, 0, 100, 'player1', '0x6699ff', app.stage);
-        let planet = new Planet(planetView.container, scene, context.settings.engineFps, 'player1');
+        let planet = new Planet(planetView, scene, context.settings.engineFps, 'player1');
 
         /**
          * @type {Bot[]}  
          */
         let bots = []
-        for (let i = 0; i < 1; i++){
-            bots.push(new Bot(app.stage, scene, context.settings.engineFps, context.random, 'bot' + i, inputManager))
+        for (let i = 0; i < 0; i++){
+            let botName = 'bot' + i
+            let planetView = new PlanetView(0, 0, 100, botName, '0x6699ff', context.app.stage);
+            let planet = new Planet(planetView.container, scene, null, botName);
+            let bot = new Bot(context, scene, planet, botName)
+            bots.push(bot)
         }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
@@ -170,6 +167,9 @@ export class GameplayService {
             inputDriver.networkTick(delta);
             collision.isPlanetCollidesMeteor();
             meteorSpawner.networkUpdate(delta);
+            scene.getPlanets().map((planet) => {
+                planet.networkTick()
+            })
         }))
 
     }
