@@ -1789,15 +1789,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CollisionEngine = void 0;
 
-var _gameContext = require("../models/game-context");
-
 var _meteor = require("../models/meteor");
 
 var _planet = require("../models/planet");
 
 var _scene = require("../models/scene");
-
-var _ticker = require("./ticker");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1847,10 +1843,10 @@ var CollisionEngine = /*#__PURE__*/function () {
   }, {
     key: "isPlanetCollidesPlanet",
     value: function isPlanetCollidesPlanet() {
-      var planets = this.getPlanets(); // we are using multiplications because it's faster than calling Math.pow
+      var planets = this.getPlanets();
 
       for (var i = 0; i < planets.length; i++) {
-        for (var j = 0; j < planets.length; j++) {
+        for (var j = i + 1; j < planets.length; j++) {
           var planet1 = planets[i];
           var planet2 = planets[j];
           if (planet1 == planet2) continue;
@@ -1876,7 +1872,7 @@ var CollisionEngine = /*#__PURE__*/function () {
 
 exports.CollisionEngine = CollisionEngine;
 
-},{"../models/game-context":22,"../models/meteor":24,"../models/planet":26,"../models/scene":27,"./ticker":12}],11:[function(require,module,exports){
+},{"../models/meteor":24,"../models/planet":26,"../models/scene":27}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1943,10 +1939,20 @@ exports.Random = Random;
 },{"../utils/vector2":90,"Prando":65}],12:[function(require,module,exports){
 "use strict";
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Ticker = void 0;
+exports.TickerSettings = exports.Ticker = void 0;
+
+var M = _interopRequireWildcard(require("./../utils/math"));
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1957,15 +1963,27 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Ticker = /*#__PURE__*/function () {
   /**
    * 
-   * @param {Number} tickPerSeconds max - 60fps (setInterval cannot call faster than 16ms)
+   * @param {TickerSettings} settings max - 60fps (setInterval cannot call faster than 16ms)
    * @param {*} callback 
    */
-  function Ticker(tickPerSeconds, callback) {
+  function Ticker(settings, callback) {
+    var _this = this;
+
     _classCallCheck(this, Ticker);
 
-    this.previousTime = Date.now();
-    var delta = 1 / tickPerSeconds * 1000;
+    var tickPerSeconds = settings.tickPerSeconds;
+    var limit = settings.tickerTimeLimitSec;
+    var delta = M.div(1, tickPerSeconds) * 1000;
+    this.ticks = 0;
     this.interval = setInterval(function () {
+      _this.ticks++;
+
+      if (limit != 0 && _this.ticks > tickPerSeconds * limit) {
+        _this.ticks = 0;
+
+        _this.stop();
+      }
+
       callback(delta);
     }, delta);
   }
@@ -1982,7 +2000,27 @@ var Ticker = /*#__PURE__*/function () {
 
 exports.Ticker = Ticker;
 
-},{}],13:[function(require,module,exports){
+var TickerSettings =
+/**
+ * @type {number}
+ * @public
+ */
+
+/** 
+ * @type {number}
+ * @public
+ */
+function TickerSettings() {
+  _classCallCheck(this, TickerSettings);
+
+  _defineProperty(this, "tickPerSeconds", 0);
+
+  _defineProperty(this, "tickerTimeLimitSec", void 0);
+};
+
+exports.TickerSettings = TickerSettings;
+
+},{"./../utils/math":88}],13:[function(require,module,exports){
 "use strict";
 
 var _require = require('prando'),
@@ -2134,14 +2172,11 @@ var MovingState = /*#__PURE__*/function () {
     value: function update(delta) {
       if (this.planet.transform.isCollideBorder()) {
         this.currentDirection = this.random.getVector();
-        console.log('[MovingState] border colided, getting random vector: ' + JSON.stringify(this.currentDirection));
       }
 
       this.timer.update(delta);
-      console.log('[MovingState] move: ' + JSON.stringify(this.currentDirection));
 
       if (this.timer.isFinished()) {
-        console.log('[MovingState] time is finished, move to another state: SearchAndAttackState ');
         this.nextState = StatesEnum.SearchAndAttackState;
       }
     }
@@ -2201,9 +2236,7 @@ var SearchAndAttackState = /*#__PURE__*/function () {
       if (closestMeteor) {
         var meteorPosition = closestMeteor.transform.position;
         this.currentDirection = meteorPosition.substract(planetPosition).getNormalized();
-        console.log('[SearchAndAttackState] found new meteor: ' + JSON.stringify(this.currentDirection));
       } else {
-        console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState');
         this.nextState = StatesEnum.MovingState;
       } //}
 
@@ -2685,8 +2718,7 @@ var Camera = /*#__PURE__*/function () {
 
   _createClass(Camera, [{
     key: "setMenuMode",
-    value: function setMenuMode() {
-      var stage = this.app.stage;
+    value: function setMenuMode(stage) {
       stage.position.x = 0;
       stage.position.y = 0;
       stage.scale.set(1);
@@ -2694,28 +2726,27 @@ var Camera = /*#__PURE__*/function () {
     }
   }, {
     key: "setCameraBySettings",
-    value: function setCameraBySettings() {
+    value: function setCameraBySettings(stage) {
       var cameraMode = this.settings.cameraMode;
 
       switch (cameraMode) {
         case _settings.CameraModeEnum.showPlayer:
-          this.setFollowPlayerMode();
+          this.setFollowPlayerMode(stage);
           break;
 
         case _settings.CameraModeEnum.showMap:
-          this.setSeeWholeMapMode();
+          this.setSeeWholeMapMode(stage);
           break;
 
         case _settings.CameraModeEnum.showBot:
-          this.setFollowPlayerMode();
+          this.setFollowPlayerMode(stage);
           break;
       }
     }
   }, {
     key: "setFollowPlayerMode",
-    value: function setFollowPlayerMode() {
-      var stage = this.app.stage; //(0,0) for us is center of the screen
-
+    value: function setFollowPlayerMode(stage) {
+      //(0,0) for us is center of the screen
       stage.position.x = this.app.renderer.width / 2;
       stage.position.y = this.app.renderer.height / 2; //scale it
       //stage.scale.set(0.5) 
@@ -2724,13 +2755,16 @@ var Camera = /*#__PURE__*/function () {
     }
   }, {
     key: "setSeeWholeMapMode",
-    value: function setSeeWholeMapMode() {
-      var stage = this.app.stage; //(0,0) for us is center of the screen
+    value: function setSeeWholeMapMode(stage) {
+      var mapSize = this.settings.mapSize;
+      var m = -0.00004;
+      var k = 0.28;
+      var y = m * mapSize + k; //(0,0) for us is center of the screen
 
       stage.position.x = this.app.renderer.width / 2;
       stage.position.y = this.app.renderer.height / 2; //scale it
 
-      stage.scale.set(0.2);
+      stage.scale.set(y);
     }
   }]);
 
@@ -2830,15 +2864,22 @@ var GameContext = /*#__PURE__*/function () {
   }, {
     key: "loadMenu",
     value: function loadMenu() {
-      this.camera.setMenuMode();
       this.cleanStage();
+      this.camera.setMenuMode(this.app.stage);
       new _menuService.MenuService(this);
     }
   }, {
     key: "loadGameplay",
     value: function loadGameplay() {
-      this.camera.setCameraBySettings();
       this.cleanStage();
+      var ui = new _pixi.Container();
+      ui.name = "ui";
+      var gameplay = new _pixi.Container();
+      gameplay.name = "gameplay";
+      this.app.stage.addChild(gameplay);
+      this.app.stage.addChild(ui);
+      this.camera.setCameraBySettings(gameplay); //  this.app.stage.
+
       new _gameplayService.GameplayService(this);
     }
   }]);
@@ -2890,7 +2931,7 @@ var MeteorSpawner = /*#__PURE__*/function () {
    * @param {number} spawnPerSecond 
    * @param {typeof MeteorView} meteorViewClass - will move MeteorView class reference upper
    */
-  function MeteorSpawner(context, scene) {
+  function MeteorSpawner(context, scene, stage) {
     _classCallCheck(this, MeteorSpawner);
 
     _defineProperty(this, "spawnedAmount", 0);
@@ -2900,7 +2941,7 @@ var MeteorSpawner = /*#__PURE__*/function () {
     this.random = context.random;
     this.maxAsteroids = context.settings.maxAsteroids;
     this.maxAsteroidsSameTime = context.settings.maxAsteroidsSameTime;
-    this.pixiStage = context.app.stage;
+    this.pixiStage = stage;
     this.spawnedAmount = 0;
   }
 
@@ -3056,19 +3097,102 @@ var PlanetLevel = function PlanetLevel() {
 exports.PlanetLevel = PlanetLevel;
 var levels = [{
   level: 1,
-  speed: 1,
-  size: 100,
-  expForLevelUp: 2
+  speed: 0.6,
+  size: 110,
+  zoom: 0.75,
+  expForLevelUp: 1,
+  gainLossRate: null
 }, {
   level: 2,
-  speed: 0.8,
-  size: 110,
-  expForLevelUp: 2
+  speed: 0.57,
+  size: 140,
+  zoom: 0.72,
+  expForLevelUp: 1,
+  gainLossRate: null
 }, {
   level: 3,
-  speed: 0.6,
-  size: 120,
-  expForLevelUp: 2
+  speed: 0.54,
+  size: 185,
+  zoom: 0.69,
+  expForLevelUp: 2,
+  gainLossRate: null
+}, {
+  level: 4,
+  speed: 0.51,
+  size: 245,
+  zoom: 0.66,
+  expForLevelUp: 2,
+  gainLossRate: null
+}, {
+  level: 5,
+  speed: 0.48,
+  size: 320,
+  zoom: 0.63,
+  expForLevelUp: 2,
+  gainLossRate: null
+}, {
+  level: 6,
+  speed: 0.44999999999999996,
+  size: 410,
+  zoom: 0.6,
+  expForLevelUp: 2,
+  gainLossRate: null
+}, {
+  level: 7,
+  speed: 0.42,
+  size: 515,
+  zoom: 0.5700000000000001,
+  expForLevelUp: 3,
+  gainLossRate: null
+}, {
+  level: 8,
+  speed: 0.39,
+  size: 635,
+  zoom: 0.54,
+  expForLevelUp: 3,
+  gainLossRate: null
+}, {
+  level: 9,
+  speed: 0.36,
+  size: 770,
+  zoom: 0.51,
+  expForLevelUp: 3,
+  gainLossRate: null
+}, {
+  level: 10,
+  speed: 0.32999999999999996,
+  size: 920,
+  zoom: 0.48,
+  expForLevelUp: 3,
+  gainLossRate: null
+}, {
+  level: 11,
+  speed: 0.3,
+  size: 1085,
+  zoom: 0.45,
+  expForLevelUp: 3,
+  gainLossRate: null
+}, {
+  level: 12,
+  speed: 0.27,
+  size: 1265,
+  zoom: 0.42000000000000004,
+  expForLevelUp: 4,
+  gainLossRate: null
+}, {
+  level: 13,
+  speed: 0.24,
+  size: 1460,
+  zoom: 0.39,
+  expForLevelUp: 4,
+  gainLossRate: null
+}, {
+  level: 14,
+  speed: 0.20999999999999996,
+  size: 1670,
+  zoom: 0.36,
+  expForLevelUp: 50000000000000000,
+  gainLossRate: null
 }];
 exports.levels = levels;
 
@@ -3144,18 +3268,28 @@ var Planet = /*#__PURE__*/function () {
 
     _defineProperty(this, "exp", 0);
 
+    _defineProperty(this, "isActive", false);
+
     this.view = view;
     this.scene = scene;
     this.transform = new _transform.Transform(scene.mapSize);
     this.name = name;
+    this.isActive = true;
     scene.addPlanet(this);
     this.applyLevelStats();
   }
 
   _createClass(Planet, [{
+    key: "moveToPosition",
+    value: function moveToPosition(position) {
+      this.transform.moveToPosition(position);
+    }
+  }, {
     key: "moveByVector",
     value: function moveByVector(delta, input) {
       var _this = this;
+
+      if (!this.isActive) return false;
 
       var speed = _planetLevel.levels.find(function (l) {
         return l.level == _this.level;
@@ -3173,42 +3307,68 @@ var Planet = /*#__PURE__*/function () {
   }, {
     key: "onCollideMeteor",
     value: function onCollideMeteor(meteor) {
-      //TODO: maybe need to move isCollider to Collide Engine
+      if (!this.isActive) return false;
+
       if (this.transform.isCollide(meteor.transform)) {
         meteor["delete"]();
         this.score++;
         this.exp++;
       }
     }
+    /**
+     * 
+     * @param {Planet} planet 
+     */
+
   }, {
     key: "onCollidePlanet",
-    value: function onCollidePlanet(planet) {// do somethong
-    }
-  }, {
-    key: "isActive",
-    value: function isActive() {
-      return this.view != null;
+    value: function onCollidePlanet(planet) {
+      if (!this.isActive || !planet.isActive) return false;
+
+      if (this.transform.isCollide(planet.transform)) {
+        var newExp = 2;
+
+        if (this.level > planet.level) {
+          this.score += newExp;
+          this.exp += newExp;
+          planet["delete"]();
+        } else if (this.level < planet.level) {
+          planet.score += newExp;
+          planet.exp += newExp;
+          this["delete"]();
+        }
+      } // do somethong
+
     }
   }, {
     key: "delete",
     value: function _delete() {
-      this.view["delete"]();
-      this.view = null;
-      this.scene.deletePlanet(this);
+      this.view.setGrayColor();
+      this.isActive = false; //this.view.delete();
+      //this.view = null;
+      //this.scene.deletePlanet(this)
+    }
+  }, {
+    key: "getLevelStat",
+    value: function getLevelStat() {
+      var _this2 = this;
+
+      return _planetLevel.levels.find(function (l) {
+        return l.level == _this2.level;
+      });
     }
   }, {
     key: "checkForLevelUp",
     value: function checkForLevelUp() {
-      var _this2 = this;
+      var _this3 = this;
 
       var expForLevelUp = _planetLevel.levels.find(function (l) {
-        return l.level == _this2.level;
+        return l.level == _this3.level;
       }).expForLevelUp;
 
       var currentExp = this.exp;
 
-      if (expForLevelUp <= currentExp) {
-        console.log("level up!");
+      if (expForLevelUp && expForLevelUp <= currentExp) {
         this.exp = 0;
         this.level = this.level + 1;
         this.applyLevelStats();
@@ -3217,10 +3377,10 @@ var Planet = /*#__PURE__*/function () {
   }, {
     key: "applyLevelStats",
     value: function applyLevelStats() {
-      var _this3 = this;
+      var _this4 = this;
 
       var levelStats = _planetLevel.levels.find(function (l) {
-        return l.level == _this3.level;
+        return l.level == _this4.level;
       });
 
       this.transform.setSize(levelStats.size);
@@ -3291,6 +3451,8 @@ var Scene = /*#__PURE__*/function () {
 
     _defineProperty(this, "mapSize", void 0);
 
+    _defineProperty(this, "removedObjects", []);
+
     this.mapSize = mapSize;
   }
 
@@ -3302,6 +3464,7 @@ var Scene = /*#__PURE__*/function () {
   }, {
     key: "getPlanets",
     value: function getPlanets() {
+      // exclude removed objects
       return this.planets;
     }
   }, {
@@ -3378,20 +3541,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var Settings = function Settings() {
+var Settings = //0 is infinity
+function Settings() {
   _classCallCheck(this, Settings);
+
+  _defineProperty(this, "uiFps", 60);
 
   _defineProperty(this, "engineFps", 30);
 
-  _defineProperty(this, "mapSize", 2000);
+  _defineProperty(this, "mapSize", 4000);
 
-  _defineProperty(this, "maxAsteroids", 40);
+  _defineProperty(this, "maxAsteroids", 400);
 
-  _defineProperty(this, "maxAsteroidsSameTime", 20);
+  _defineProperty(this, "maxAsteroidsSameTime", 5);
 
   _defineProperty(this, "spawnAsteroidPerSecond", 1);
 
   _defineProperty(this, "cameraMode", CameraModeEnum.showPlayer);
+
+  _defineProperty(this, "botsAmount", 100);
+
+  _defineProperty(this, "tickerTimeLimitSec", 0);
 };
 
 exports.Settings = Settings;
@@ -3448,6 +3618,11 @@ var Transform = /*#__PURE__*/function () {
     value: function move(vectorDelta) {
       var newPosition = this.position.add(vectorDelta);
       this.position = newPosition.trim(0 + this.size / 2, this.mapSize - this.size / 2);
+    }
+  }, {
+    key: "moveToPosition",
+    value: function moveToPosition(position) {
+      this.position = position;
     }
   }, {
     key: "isCollideBorder",
@@ -46231,8 +46406,6 @@ var _meteorSpawner = require("../models/meteor-spawner");
 
 var _bot = require("../input/bot");
 
-var _eventManager = require("../utils/event-manager");
-
 var _ticker = require("../engine/ticker");
 
 var _gameInputDriver = require("../input/game-input-driver");
@@ -46264,22 +46437,26 @@ function GameplayService(context) {
   * @type {Application}  
   */
 
-  var app = context.app;
+  var app = context.app; //ui container
+
+  var ui = app.stage.getChildByName("ui");
+  var gameplay = app.stage.getChildByName("gameplay");
   var inputManager = context.input;
 
   function createTile(x, y) {
-    new _buttonView.Button(x, y, 100, 100, '', '0x111111', app.stage, function () {});
+    new _buttonView.Button(x, y, 100, 100, '', '0x111111', gameplay, function () {});
   }
 
-  for (var i = 0; i < 20; i++) {
-    for (var j = 0; j < 20; j++) {
+  var mapSize = context.settings.mapSize;
+
+  for (var i = 0; i < mapSize / 100; i++) {
+    for (var j = 0; j < mapSize / 100; j++) {
       createTile(i * 100 + 50, j * 100 + 50);
     }
   }
 
-  var eventTick = new _eventManager.EventManager();
   var scene = new _scene.Scene(context.settings.mapSize);
-  var planetView = new _planetView2.PlanetView(0, 0, 100, 'player1', '0x6699ff', app.stage);
+  var planetView = new _planetView2.PlanetView(0, 0, 100, 'player1', '0x110033', gameplay);
   var planet = new _planet2.Planet(planetView, scene, context.settings.engineFps, 'player1');
   /**
    * @type {Bot[]}  
@@ -46287,29 +46464,29 @@ function GameplayService(context) {
 
   var bots = [];
 
-  for (var _i = 0; _i < 0; _i++) {
+  for (var _i = 0; _i < context.settings.botsAmount; _i++) {
     var botName = 'bot' + _i;
+    var position = context.random.getVectorSquare(50, scene.mapSize - 50);
 
-    var _planetView = new _planetView2.PlanetView(0, 0, 100, botName, '0x6699ff', context.app.stage);
+    var _planetView = new _planetView2.PlanetView(0, 0, 100, botName, '0x6699ff', gameplay);
 
-    var _planet = new _planet2.Planet(_planetView.container, scene, null, botName);
+    var _planet = new _planet2.Planet(_planetView, scene, null, botName);
+
+    _planet.moveToPosition(position);
 
     var bot = new _bot.Bot(context, scene, _planet, botName);
     bots.push(bot);
   }
 
   var collision = new _collisionEngine.CollisionEngine(scene, context.settings.engineFps);
-  var meteorSpawner = new _meteorSpawner.MeteorSpawner(context, scene);
-  new _centerCoordinatesView.CenterCoordinatesView(0, 0, app.stage);
-  new _centerCoordinatesView.CenterCoordinatesView(100, null, app.stage);
-  new _centerCoordinatesView.CenterCoordinatesView(null, 100, app.stage);
+  var meteorSpawner = new _meteorSpawner.MeteorSpawner(context, scene, gameplay);
+  new _centerCoordinatesView.CenterCoordinatesView(0, 0, gameplay);
+  new _centerCoordinatesView.CenterCoordinatesView(100, null, gameplay);
+  new _centerCoordinatesView.CenterCoordinatesView(null, 100, gameplay);
   var inputDriver = new _gameInputDriver.GameInputDriver(context.input, scene);
-  var tickers = []; //ui container
-
-  var ui = new _pixi.Container();
-  app.stage.addChild(ui);
-  var scoreView = new _textView.TextView(0, -450, "123567", ui);
-  var button = new _buttonView.Button(450, -450, 100, 100, "☰", "white", ui, function () {
+  var tickers = [];
+  var scoreView = new _textView.TextView(250, 50, "123567", ui);
+  var button = new _buttonView.Button(450, 50, 100, 100, "☰", "white", ui, function () {
     var viewSettings = new _resultViewSettings.ResultViewSettings();
     viewSettings.playerScore = planet.score;
     viewSettings.resultViewType = _resultViewSettings.ResultViewType.LevelMenu;
@@ -46324,31 +46501,28 @@ function GameplayService(context) {
       });
       context.loadMenu();
     });
-  }); //camera
-  //app.ticker.add((delta) => {
-  // ui ticker
-
-  tickers.push(new _ticker.Ticker(100, function (delta) {
+  });
+  var engineTickerSetting = new _ticker.TickerSettings();
+  engineTickerSetting.tickPerSeconds = context.settings.engineFps;
+  engineTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec;
+  tickers.push(new _ticker.Ticker(engineTickerSetting, function (delta) {
     var pos = planet.transform.position; //move camera
 
-    if (context.settings.cameraMode == _settings.CameraModeEnum.showPlayer) app.stage.pivot.set(pos.x, pos.y);
-    if (context.settings.cameraMode == _settings.CameraModeEnum.showMap) app.stage.pivot.set(context.settings.mapSize / 2, context.settings.mapSize / 2); //adjust ui container
+    if (context.settings.cameraMode == _settings.CameraModeEnum.showPlayer) {
+      var zoom = planet.getLevelStat().zoom;
+      gameplay.pivot.set(pos.x, pos.y);
+      gameplay.scale.set(zoom); //ui.scale.set(zoom,zoom) 
+    }
 
-    ui.x = pos.x;
-    ui.y = pos.y;
-    app.stage.setChildIndex(ui, app.stage.children.length - 1);
-    scoreView.setText(planet.score + "");
+    if (context.settings.cameraMode == _settings.CameraModeEnum.showMap) gameplay.pivot.set(context.settings.mapSize / 2, context.settings.mapSize / 2);
+    scoreView.setText(planet.level + "");
     scene.getObjects().map(function (t) {
       return t.tick(delta);
     });
   })); // tick driver (temporary use simple ticker)
 
-  tickers.push(new _ticker.Ticker(context.settings.engineFps, function (delta) {
-    bots.map(function (b) {
-      b.tick(delta);
-      inputManager.addInput(b.getDirection());
-    }); //check score
-
+  tickers.push(new _ticker.Ticker(engineTickerSetting, function (delta) {
+    //check score
     if (currentState == StatesEnum.GameState && meteorSpawner.allMeteorsWasDestroyed()) {
       currentState = StatesEnum.MenuState; // find best player
 
@@ -46375,29 +46549,29 @@ function GameplayService(context) {
         currentState = StatesEnum.GameState;
       });
     }
-  })); // network tick driver
+  }));
+  var networkTickerSetting = new _ticker.TickerSettings();
+  networkTickerSetting.tickPerSeconds = 20;
+  networkTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec; // network tick driver
 
-  tickers.push(new _ticker.Ticker(20, function (delta) {
+  tickers.push(new _ticker.Ticker(networkTickerSetting, function (delta) {
+    bots.map(function (b) {
+      b.tick(delta);
+      inputManager.addInput(b.getDirection());
+    });
     inputDriver.networkTick(delta);
     collision.isPlanetCollidesMeteor();
+    collision.isPlanetCollidesPlanet();
     meteorSpawner.networkUpdate(delta);
     scene.getPlanets().map(function (planet) {
       planet.networkTick();
     });
   }));
 };
-/*
-
-stage.position.set(renderer.screen.width/2, renderer.screen.height/2);
-stage.scale.set(1.33);//scale it whatever you want
-stage.pivot.set(myCharacter.x, myCharacter.y); //now character inside stage is mapped to center of screen
-
-*/
-
 
 exports.GameplayService = GameplayService;
 
-},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../input/game-input-driver":15,"../models/game-context":22,"../models/meteor-spawner":23,"../models/planet":26,"../models/scene":27,"../models/settings":28,"../ui/button-view":77,"../ui/center-coordinates-view":78,"../ui/planet-view":82,"../ui/result-view":84,"../ui/result-view-settings":83,"../ui/text-view":85,"../utils/event-manager":87,"pixi.js":71}],75:[function(require,module,exports){
+},{"../engine/collision-engine":10,"../engine/ticker":12,"../input/bot":14,"../input/game-input-driver":15,"../models/game-context":22,"../models/meteor-spawner":23,"../models/planet":26,"../models/scene":27,"../models/settings":28,"../ui/button-view":77,"../ui/center-coordinates-view":78,"../ui/planet-view":82,"../ui/result-view":84,"../ui/result-view-settings":83,"../ui/text-view":85,"pixi.js":71}],75:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46628,8 +46802,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CommonView = void 0;
 
-var _pixi = require("pixi.js");
-
 var _vector = require("../../utils/vector2");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -46677,7 +46849,7 @@ var CommonView = /*#__PURE__*/function () {
 
 exports.CommonView = CommonView;
 
-},{"../../utils/vector2":90,"pixi.js":71}],80:[function(require,module,exports){
+},{"../../utils/vector2":90}],80:[function(require,module,exports){
 "use strict";
 /*[test]*/
 //import pixi from "pixi-shim"; const { Application } = pixi;
@@ -46893,6 +47065,8 @@ var PlanetView = /*#__PURE__*/function () {
 
     _classCallCheck(this, PlanetView);
 
+    _defineProperty(this, "radius", null);
+
     _defineProperty(this, "circle", null);
 
     _defineProperty(this, "backgroundColor", void 0);
@@ -46929,10 +47103,21 @@ var PlanetView = /*#__PURE__*/function () {
   _createClass(PlanetView, [{
     key: "setSize",
     value: function setSize(diameter) {
-      var radius = diameter / 2;
+      this.radius = diameter / 2;
+      this.drawCircle();
+    }
+  }, {
+    key: "drawCircle",
+    value: function drawCircle() {
       this.circle.beginFill(this.backgroundColor).lineStyle(5, 'red', 1);
-      this.circle.drawCircle(0, 0, radius);
+      this.circle.drawCircle(0, 0, this.radius);
       this.circle.endFill();
+    }
+  }, {
+    key: "setGrayColor",
+    value: function setGrayColor() {
+      this.backgroundColor = '0x003300';
+      this.drawCircle();
     }
   }]);
 
@@ -46980,6 +47165,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ResultView = void 0;
 
+var _pixi = require("pixi.js");
+
 var _backgroundView = require("./background-view");
 
 var _buttonView = require("./button-view");
@@ -47017,8 +47204,8 @@ function ResultView(parent, settings, restartCallback, mainMenuCallback) {
   var PIXI = require('pixi.js');
 
   var container = new PIXI.Container();
-  container.x = 0;
-  container.y = 0;
+  container.x = 250;
+  container.y = 250;
   parent.addChild(container);
   var back = new _backgroundView.BackgroundView(container);
   var viewTitle = "No title";
@@ -47251,6 +47438,7 @@ exports.abs = abs;
 exports.isEqual = isEqual;
 // created this class to investigate the determenizm of the math operation and substitute the operation to the determenistic one
 var epsilon = 0.001;
+var decimalDigits = 3;
 
 function add(a, b) {
   return a + b;
@@ -47261,7 +47449,7 @@ function sub(a, b) {
 }
 
 function div(a, b) {
-  return a / b;
+  return (a / b).toFixed(decimalDigits);
 }
 
 function multi(a, b) {

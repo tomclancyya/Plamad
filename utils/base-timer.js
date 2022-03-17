@@ -10,14 +10,14 @@
     }
 
     update(delta){
-        console.log("not implemented")
+        //console.log("not implemented")
     }
 
     isFinished(){
-        console.log("not implemented")
+        //onsole.log("not implemented")
     }
 
     reset() {
-        console.log("not implemented")
+        //console.log("not implemented")
     }
 }

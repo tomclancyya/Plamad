@@ -83,17 +83,11 @@ export class MovingState {
 
     update(delta) {
         if (this.planet.transform.isCollideBorder()) {
-
             this.currentDirection = this.random.getVector()
-
-            console.log('[MovingState] border colided, getting random vector: ' + JSON.stringify(this.currentDirection) )
         }
         this.timer.update(delta)
-        console.log('[MovingState] move: ' + JSON.stringify(this.currentDirection) )
 
         if (this.timer.isFinished()) {
-
-        console.log('[MovingState] time is finished, move to another state: SearchAndAttackState ')
             this.nextState = StatesEnum.SearchAndAttackState
         }
     }
@@ -142,10 +136,7 @@ export class SearchAndAttackState {
             if (closestMeteor) {
                 let meteorPosition = closestMeteor.transform.position
                 this.currentDirection = meteorPosition.substract(planetPosition).getNormalized()
-                console.log('[SearchAndAttackState] found new meteor: ' + JSON.stringify(this.currentDirection))
             } else {
-
-                console.log('[SearchAndAttackState] cannot find meteor, changing state to MovingState')
                 this.nextState = StatesEnum.MovingState
             }
         //}

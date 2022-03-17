@@ -14,6 +14,10 @@ export class CommonView {
         this.container = container      
     }
 
+    setSize(diameter){
+        
+    }
+
     /**
      * 
      * @param {Vector2} newPosition 

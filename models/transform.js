@@ -15,6 +15,10 @@ export class Transform {
         this.position = newPosition.trim(0 + this.size / 2, this.mapSize - this.size / 2);
     }
 
+    moveToPosition(position){
+        this.position = position
+    }
+
     isCollideBorder(){
         let x = this.position.x
         let y = this.position.y

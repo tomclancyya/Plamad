@@ -1,10 +1,13 @@
 export class Settings {
+    uiFps = 60
     engineFps = 30
-    mapSize = 2000
-    maxAsteroids = 40
-    maxAsteroidsSameTime = 20
+    mapSize = 4000
+    maxAsteroids = 400
+    maxAsteroidsSameTime = 5
     spawnAsteroidPerSecond = 1
     cameraMode = CameraModeEnum.showPlayer
+    botsAmount = 100
+    tickerTimeLimitSec = 0 //0 is infinity
 
     constructor() {}
 }

@@ -1,8 +1,6 @@
-import { GameContext } from "../models/game-context";
 import { Meteor } from "../models/meteor";
 import { Planet } from "../models/planet"
 import { Scene } from "../models/scene";
-import { Ticker } from "./ticker";
 
 export class CollisionEngine {
 
@@ -36,9 +34,8 @@ export class CollisionEngine {
 
     isPlanetCollidesPlanet() {
         let planets = this.getPlanets()
-        // we are using multiplications because it's faster than calling Math.pow
         for (let i = 0; i < planets.length; i++) {
-            for (let j = 0; j < planets.length; j++) {
+            for (let j = i + 1; j < planets.length; j++) {
                 let planet1 = planets[i];
                 let planet2 = planets[j];
                 if (planet1 == planet2)

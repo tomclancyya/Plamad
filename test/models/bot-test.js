@@ -25,7 +25,7 @@ export class BotTest {
                     let planet = new Planet(new TestView(), scene, 40, "bot1")
                     planet.transform.position = new Vector2(100,100)
                     let timer = new BaseTimer(999999)
-                    let state = new SearchAndAttackState(stateManager, planet, scene, null, timer)
+                    let state = new SearchAndAttackState(planet, scene, null, timer)
                     let meteor1 = new Meteor(new TestView(), scene, new Vector2(110,100))
                     let meteor2 = new Meteor(new TestView(), scene, new Vector2(100,105))
                     scene.meteors = [
@@ -86,7 +86,6 @@ export class BotTest {
                     return done();
                 },
                 "planet is not going outside of border": () => {
-                    return done();
                     let scene = new Scene(1000)
                     let planet = new Planet(new TestView(), scene, 40, "bot1")
                     planet.transform.position = new Vector2(0,0)

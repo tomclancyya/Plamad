@@ -1,5 +1,8 @@
 
-/*[test]*///import pixi from "pixi-shim"; const { Application } = pixi;
+
+/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
+/*[production]*/import { Container } from "pixi.js";
+/*[test]*///const { Application } = pixi;
 /*[production]*/import { Application } from "pixi.js";
 
 import { Random } from "../engine/random";
@@ -60,15 +63,22 @@ export class GameContext {
     }
 
     loadMenu(){
-        this.camera.setMenuMode()
         this.cleanStage()
+        this.camera.setMenuMode(this.app.stage)
         new MenuService(this);   
     }
 
     loadGameplay(){
-        this.camera.setCameraBySettings()
-
         this.cleanStage()
+        let ui = new Container()
+        ui.name = "ui"
+        let gameplay = new Container()
+        gameplay.name = "gameplay"
+        this.app.stage.addChild(gameplay)
+        this.app.stage.addChild(ui)
+        
+        this.camera.setCameraBySettings(gameplay)
+      //  this.app.stage.
         new GameplayService(this);
     }
     

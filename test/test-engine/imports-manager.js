@@ -19,15 +19,27 @@ if (env == 'production')
 
 function enableImportForTest() {
     forEachJsFilesDo((file) => {
-        shell.sed('-i', escape(testDisabled), testEnabled, file)
-        shell.sed('-i', escape(productionEnabled), productionDisabled, file)
+       // console.log(file)
+        try {          
+            let prodDisableAlready = shell.grep('-l', escape(productionDisabled), file) != '\n'     
+            shell.sed('-i', escape(testDisabled), testEnabled, file)
+
+            if (!prodDisableAlready)
+                shell.sed('-i', escape(productionEnabled), productionDisabled, file)
+        } catch (error) {
+            console.log("cannot switch env for file " + file)
+            console.log(error)
+        }
     })
 }
 
 function enableImportForProduction() {
     forEachJsFilesDo((file) => {
         shell.sed('-i', escape(productionDisabled), productionEnabled, file)
-        shell.sed('-i', escape(testEnabled), testDisabled, file)
+
+        let testDisabledAlready = shell.grep('-l', escape(testDisabled), file) != '\n'     
+        if (!testDisabledAlready)
+            shell.sed('-i', escape(testEnabled), testDisabled, file)
     });
 }
 
@@ -39,7 +51,6 @@ function forEachJsFilesDo(callback) {
         || f.includes('.json')
         || f.includes('mini.js'))
         && f.includes('.js')
-        && f.includes('common-view.js')
     ).forEach(function (file) {
         callback(file)
     });

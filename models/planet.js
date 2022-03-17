@@ -1,18 +1,13 @@
 import { Container } from 'pixi.js';
-import { Button } from '../ui/button-view'
-import { GameContext } from './game-context';
 import { Transform } from './transform'
 import { Scene } from './scene';
-import { InputPlayer } from '../input/input-player';
-import { Input } from '../input/input';
-import { EventManager } from '../utils/event-manager';
 import { levels } from './planet-level';
 
 export class Planet {
-      /** 
-         * @type {Transform}
-         * @public
-         */
+    /** 
+     * @type {Transform}
+     * @public
+     */
     transform = null
 
     /** 
@@ -38,6 +33,8 @@ export class Planet {
 
     exp = 0;
 
+    isActive = false;
+
     /** 
     * @param {Scene} scene  
     */
@@ -46,16 +43,24 @@ export class Planet {
         this.scene = scene 
         this.transform = new Transform(scene.mapSize);
         this.name = name;
-
+        this.isActive = true;
         scene.addPlanet(this)
 
         this.applyLevelStats()
     }
 
+    moveToPosition(position){
+        this.transform.moveToPosition(position);   
+    }
+
     moveByVector(delta, input) {
+        if (!this.isActive) 
+            return false;
+
         let speed = levels.find(l => l.level == this.level).speed
         let direction = input.multiValue(delta * speed);
-        this.transform.move(direction);     
+        this.transform.move(direction);   
+        
     }
 
     render() {
@@ -64,33 +69,56 @@ export class Planet {
     }
 
     onCollideMeteor(meteor){
-        //TODO: maybe need to move isCollider to Collide Engine
+        if (!this.isActive)
+            return false;
+
         if (this.transform.isCollide(meteor.transform)){
             meteor.delete();
             this.score++;
             this.exp++;
         }
     }
-
+    /**
+     * 
+     * @param {Planet} planet 
+     */
     onCollidePlanet(planet){
+        if (!this.isActive || !planet.isActive)
+            return false;
+
+        if (this.transform.isCollide(planet.transform)){
+            let newExp = 2
+            if (this.level > planet.level){
+                this.score += newExp
+                this.exp += newExp
+                planet.delete()
+            } else if (this.level < planet.level) {
+                planet.score += newExp
+                planet.exp += newExp
+                this.delete()
+            } 
+        }
+
+        
         // do somethong
     }
 
-    isActive() {
-        return this.view != null
+    delete() {
+        this.view.setGrayColor();
+        this.isActive = false;
+        //this.view.delete();
+        //this.view = null;
+        //this.scene.deletePlanet(this)
     }
 
-    delete() {
-        this.view.delete();
-        this.view = null;
-        this.scene.deletePlanet(this)
+    getLevelStat() {
+        return  levels.find(l => l.level == this.level)
     }
 
     checkForLevelUp(){
         let expForLevelUp = levels.find(l => l.level == this.level).expForLevelUp
         let currentExp = this.exp
-        if (expForLevelUp <= currentExp) {
-            console.log("level up!")
+        if (expForLevelUp && expForLevelUp <= currentExp) {
             this.exp = 0
             this.level = this.level + 1;
             this.applyLevelStats()

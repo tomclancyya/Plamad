@@ -24,6 +24,8 @@ export class Scene {
      */
     mapSize;
 
+    removedObjects = []
+
     constructor(mapSize, randomizer) {
         this.mapSize = mapSize;
     }
@@ -33,6 +35,7 @@ export class Scene {
     }
 
     getPlanets() {
+        // exclude removed objects
         return this.planets;
     }
 

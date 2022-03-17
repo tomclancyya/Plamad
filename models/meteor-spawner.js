@@ -21,13 +21,13 @@ export class MeteorSpawner {
      * @param {number} spawnPerSecond 
      * @param {typeof MeteorView} meteorViewClass - will move MeteorView class reference upper
      */
-    constructor(context, scene){
+    constructor(context, scene, stage){
         this.timer = new Timer(context.settings.spawnAsteroidPerSecond);
         this.scene = scene;
         this.random = context.random;
         this.maxAsteroids = context.settings.maxAsteroids;
         this.maxAsteroidsSameTime = context.settings.maxAsteroidsSameTime;
-        this.pixiStage = context.app.stage;
+        this.pixiStage = stage;
         this.spawnedAmount = 0
     }
 

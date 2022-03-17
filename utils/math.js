@@ -1,6 +1,7 @@
 // created this class to investigate the determenizm of the math operation and substitute the operation to the determenistic one
 
 const epsilon = 0.001
+const decimalDigits = 3
  
     export function add(a, b){
         return a + b;
@@ -11,7 +12,7 @@ const epsilon = 0.001
     }
 
     export function div(a, b){
-        return a / b;
+        return (a / b).toFixed(decimalDigits);
     }
 
     export function multi(a, b){

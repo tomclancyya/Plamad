@@ -1,5 +1,4 @@
-import { Application } from 'pixi.js';
-import { Container } from 'pixi.js';
+import { Application, ObservablePoint } from 'pixi.js';
 import { Button } from '../ui/button-view';
 import { GameContext } from '../models/game-context';
 import { Planet } from '../models/planet';
@@ -9,8 +8,7 @@ import { CollisionEngine } from '../engine/collision-engine';
 import { Scene } from '../models/scene';
 import { MeteorSpawner } from '../models/meteor-spawner';
 import { Bot } from '../input/bot';
-import { EventManager } from '../utils/event-manager';
-import { Ticker } from '../engine/ticker';
+import { Ticker, TickerSettings } from '../engine/ticker';
 import { GameInputDriver } from '../input/game-input-driver';
 import { TextView } from '../ui/text-view';
 import { ResultView } from '../ui/result-view';
@@ -37,53 +35,55 @@ export class GameplayService {
         */
         let app = context.app;
 
+        //ui container
+        let ui = app.stage.getChildByName("ui")
+        let gameplay = app.stage.getChildByName("gameplay")
+
         let inputManager = context.input
         
         function createTile(x, y){
-            new Button(x, y, 100, 100, '', '0x111111', app.stage, () => {});
+            new Button(x, y, 100, 100, '', '0x111111', gameplay, () => {});
         }
 
-        for (let i = 0; i < 20; i++){
-            for (let j = 0; j < 20; j++){
+        let mapSize = context.settings.mapSize
+        for (let i = 0; i < mapSize / 100; i++){
+            for (let j = 0; j < mapSize / 100; j++){
                 createTile(i * 100 + 50, j * 100 + 50)
             }
         }
 
-        let eventTick = new EventManager()
-
         let scene = new Scene(context.settings.mapSize);
 
-        let planetView = new PlanetView(0, 0, 100, 'player1', '0x6699ff', app.stage);
+        let planetView = new PlanetView(0, 0, 100, 'player1', '0x110033', gameplay);
         let planet = new Planet(planetView, scene, context.settings.engineFps, 'player1');
 
         /**
          * @type {Bot[]}  
          */
         let bots = []
-        for (let i = 0; i < 0; i++){
+        for (let i = 0; i < context.settings.botsAmount; i++){
             let botName = 'bot' + i
-            let planetView = new PlanetView(0, 0, 100, botName, '0x6699ff', context.app.stage);
-            let planet = new Planet(planetView.container, scene, null, botName);
+            let position = context.random.getVectorSquare(50, scene.mapSize - 50)
+            let planetView = new PlanetView(0, 0, 100, botName, '0x6699ff', gameplay);
+            let planet = new Planet(planetView, scene, null, botName);
+            planet.moveToPosition(position)
             let bot = new Bot(context, scene, planet, botName)
             bots.push(bot)
         }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
-        let meteorSpawner = new MeteorSpawner(context, scene)
+        let meteorSpawner = new MeteorSpawner(context, scene, gameplay)
 
-        new CenterCoordinatesView(0, 0, app.stage)
-        new CenterCoordinatesView(100, null, app.stage)
-        new CenterCoordinatesView(null, 100, app.stage)
+        new CenterCoordinatesView(0, 0, gameplay)
+        new CenterCoordinatesView(100, null, gameplay)
+        new CenterCoordinatesView(null, 100, gameplay)
 
         let inputDriver = new GameInputDriver(context.input, scene)
 
         let tickers = []
 
-        //ui container
-        let ui = new Container();
-        app.stage.addChild(ui);
-        let scoreView = new TextView(0, -450, "123567", ui)
-        let button = new Button(450, -450, 100, 100, "☰", "white", ui, () => {
+        let scoreView = new TextView(250, 50, "123567", ui)
+        let button = new Button(450, 50, 100, 100, "☰", "white", ui, () => {
             let viewSettings = new ResultViewSettings()
             viewSettings.playerScore = planet.score
             viewSettings.resultViewType = ResultViewType.LevelMenu
@@ -97,39 +97,34 @@ export class GameplayService {
             },)
         })
 
-        //camera
 
+        let engineTickerSetting = new TickerSettings()
+        engineTickerSetting.tickPerSeconds = context.settings.engineFps
+        engineTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
 
-        //app.ticker.add((delta) => {
-        // ui ticker
-        tickers.push(new Ticker(100, (delta) => {
-            let pos = planet.transform.position;            
-
+        tickers.push(new Ticker(engineTickerSetting, (delta) => {
+            let pos = planet.transform.position;    
         
             //move camera
-            if (context.settings.cameraMode == CameraModeEnum.showPlayer)
-                app.stage.pivot.set(pos.x, pos.y);
+            if (context.settings.cameraMode == CameraModeEnum.showPlayer) {
+                let zoom = planet.getLevelStat().zoom
+                gameplay.pivot.set(pos.x, pos.y);
+                gameplay.scale.set(zoom) 
+                //ui.scale.set(zoom,zoom) 
+            }
 
             if (context.settings.cameraMode == CameraModeEnum.showMap)
-                app.stage.pivot.set(context.settings.mapSize / 2,context.settings.mapSize / 2);
+                gameplay.pivot.set(context.settings.mapSize / 2,context.settings.mapSize / 2);
 
-            //adjust ui container
-            ui.x = pos.x;
-            ui.y = pos.y;
-            app.stage.setChildIndex(ui, app.stage.children.length - 1)
-            scoreView.setText(planet.score + "")
+            scoreView.setText(planet.level + "")
 
             scene.getObjects().map(t => t.tick(delta))
-        }))        
-
+        }))       
 
         // tick driver (temporary use simple ticker)
-        tickers.push(new Ticker(context.settings.engineFps, (delta) => {
-            bots.map(b => { 
-                b.tick(delta);
-                inputManager.addInput(b.getDirection())
-            })
 
+        tickers.push(new Ticker(engineTickerSetting, (delta) => {
+          
             //check score
             if (currentState == StatesEnum.GameState && meteorSpawner.allMeteorsWasDestroyed()){
                 currentState = StatesEnum.MenuState
@@ -162,10 +157,20 @@ export class GameplayService {
                 }
         }))
 
+
+        let networkTickerSetting = new TickerSettings()
+        networkTickerSetting.tickPerSeconds = 20
+        networkTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
+        
         // network tick driver
-        tickers.push(new Ticker(20, (delta) => {
+        tickers.push(new Ticker(networkTickerSetting, (delta) => {
+            bots.map(b => { 
+                b.tick(delta);
+                inputManager.addInput(b.getDirection())
+            })
             inputDriver.networkTick(delta);
             collision.isPlanetCollidesMeteor();
+            collision.isPlanetCollidesPlanet();
             meteorSpawner.networkUpdate(delta);
             scene.getPlanets().map((planet) => {
                 planet.networkTick()
@@ -174,11 +179,3 @@ export class GameplayService {
 
     }
 }
-
-/*
-
-stage.position.set(renderer.screen.width/2, renderer.screen.height/2);
-stage.scale.set(1.33);//scale it whatever you want
-stage.pivot.set(myCharacter.x, myCharacter.y); //now character inside stage is mapped to center of screen
-
-*/

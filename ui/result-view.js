@@ -1,3 +1,4 @@
+import { ObservablePoint } from "pixi.js";
 import { BackgroundView } from "./background-view";
 import { Button } from "./button-view";
 import { ResultViewSettings, ResultViewType } from "./result-view-settings";
@@ -25,8 +26,8 @@ export class ResultView {
 
         let PIXI = require('pixi.js');
         let container = new PIXI.Container();
-        container.x = 0
-        container.y = 0
+        container.x = 250
+        container.y = 250
         parent.addChild(container);
         let back = new BackgroundView(container)
         let viewTitle = "No title"

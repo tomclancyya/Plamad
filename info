@@ -10,6 +10,15 @@ https://www.youtube.com/watch?v=_dtnD_8Att0&t=309s
 run tests:
 node --experimental-specifier-resolution=node ./test/app-test.js
 
+planet levels
+https://docs.google.com/spreadsheets/d/1JxAwqzGUT2EWa3vsTIHNlBeMxv247av7qSseUcO_DpY/edit#gid=0
+
+grafics расчитать формулу по паарметрам:How to Convert Graphs to Equations online
+https://www.desmos.com/calculator/ypmi9ife7p?lang=ru
+
+не могу использовать деконструктор в параметрах конструктора. Visual Code не умеет переименовывать
+
+
 
 check docs
 https://www.npmjs.com/package/eslint-plugin-jsdoc

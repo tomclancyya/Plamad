@@ -1,16 +1,25 @@
+import * as M from './../utils/math';
 export class Ticker {
     
     /**
      * 
-     * @param {Number} tickPerSeconds max - 60fps (setInterval cannot call faster than 16ms)
+     * @param {TickerSettings} settings max - 60fps (setInterval cannot call faster than 16ms)
      * @param {*} callback 
      */
-    constructor(tickPerSeconds, callback){
-        this.previousTime = Date.now();
-        let delta = (1 / tickPerSeconds) * 1000;
+    constructor(settings, callback){
+        let tickPerSeconds = settings.tickPerSeconds
+        let limit = settings.tickerTimeLimitSec
+        let delta = M.div(1,tickPerSeconds) * 1000;
+        this.ticks = 0
 
         
         this.interval = setInterval(() => {
+            this.ticks++;
+            if (limit != 0 && this.ticks > tickPerSeconds * limit) {
+                this.ticks = 0;
+                this.stop()
+            }
+
             callback(delta)
         }, delta)
     }
@@ -18,4 +27,19 @@ export class Ticker {
     stop() {
         clearInterval(this.interval)
     }
+}
+
+export class TickerSettings {
+    /**
+     * @type {number}
+     * @public
+     */
+    tickPerSeconds = 0
+
+    /** 
+     * @type {number}
+     * @public
+     */
+    tickerTimeLimitSec
+    constructor(){}
 }

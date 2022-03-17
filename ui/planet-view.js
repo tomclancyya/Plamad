@@ -15,6 +15,8 @@
  */
  export class PlanetView {
 
+    radius = null;
+
     circle = null;
     backgroundColor
 
@@ -66,10 +68,19 @@
 }
 
     setSize(diameter){
-        let radius = diameter / 2
+        this.radius = diameter / 2
+        this.drawCircle()
+    }
+
+    drawCircle() {
         this.circle.beginFill(this.backgroundColor).lineStyle(5, 'red', 1);    
-        this.circle.drawCircle(0, 0, radius);
+        this.circle.drawCircle(0, 0, this.radius);
         this.circle.endFill();
+    }
+
+    setGrayColor(){
+        this.backgroundColor = '0x003300'
+        this.drawCircle()
     }
 
 

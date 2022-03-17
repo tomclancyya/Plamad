@@ -19,8 +19,12 @@ export class TestEngine {
                     let testResult = testCase[1]()
                     console.log(testResult.color, '    ' + testResult.result, '\x1b[0m');
                 } catch (testFailResult) {
-                    console.log(testFailResult.color, '    ' + testFailResult.result, '\x1b[0m');
-                    console.log(testFailResult.color, '    ' + testFailResult.message, '\x1b[0m');
+                    if (testFailResult.result) {
+                        console.log(testFailResult.color, '    ' + testFailResult.result, '\x1b[0m');
+                        console.log(testFailResult.color, '    ' + testFailResult.message, '\x1b[0m');
+                    } else {
+                        console.log(testFailResult, '\x1b[0m');
+                    }
                 }
             })
         })
