@@ -1,8 +1,8 @@
 "use strict"
 
 
-/*[test]*///import pixi from "pixi-shim"; const { Application } = pixi;
-/*[production]*/import { Application } from "pixi.js";
+/*[test]*/import pixi from "pixi-shim"; const { Application } = pixi;
+/*[production]*///import { Application } from "pixi.js";
 
 import { Button } from "./button-view";
 import { GameContext } from "../models/game-context";

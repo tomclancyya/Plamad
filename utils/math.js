@@ -2,36 +2,36 @@
 
 const epsilon = 0.001
 const decimalDigits = 3
- 
-    export function add(a, b){
-        return a + b;
-    }
 
-    export function sub(a, b){
-        return a - b;
-    }
+export function add(a, b){
+    return a + b;
+}
 
-    export function div(a, b){
-        return (a / b).toFixed(decimalDigits);
-    }
+export function sub(a, b){
+    return a - b;
+}
 
-    export function multi(a, b){
-        return a * b;
-    }
+export function div(a, b){
+    return (a / b).toFixed(decimalDigits);
+}
 
-    export function sqrt(a){
-        return Math.sqrt(a);
-    }
+export function multi(a, b){
+    return a * b;
+}
 
-    export function sqr(a){
-        return Math.pow(a, 2);
-    }
+export function sqrt(a){
+    return Math.sqrt(a);
+}
 
-    export function abs(a){
-        return Math.abs(a)
-    }
+export function sqr(a){
+    return Math.pow(a, 2);
+}
 
-    export function isEqual(a, b){
-        return (abs(a - b) < epsilon)
-    }
+export function abs(a){
+    return Math.abs(a)
+}
+
+export function isEqual(a, b){
+    return (abs(a - b) < epsilon)
+}
 

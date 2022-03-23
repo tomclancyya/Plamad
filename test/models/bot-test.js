@@ -92,7 +92,7 @@ export class BotTest {
                     planet.transform.move(new Vector2(0, 0))
                     isEqual(planet.transform.isCollideBorder(), true)
                     planet.transform.move(new Vector2(0.01, 0.01))
-                    // is it failing? check epsilon in math file
+                    // is it failing now? so, check epsilon in math file
                     isEqual(planet.transform.isCollideBorder(), false)
                     return done();
                 }

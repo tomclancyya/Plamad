@@ -10,6 +10,9 @@ https://www.youtube.com/watch?v=_dtnD_8Att0&t=309s
 run tests:
 node --experimental-specifier-resolution=node ./test/app-test.js
 
+run test coverage:
+./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "test/*" -r=html node --experimental-specifier-resolution=node ./test/app-test.js 
+
 planet levels
 https://docs.google.com/spreadsheets/d/1JxAwqzGUT2EWa3vsTIHNlBeMxv247av7qSseUcO_DpY/edit#gid=0
 
