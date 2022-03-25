@@ -1,31 +1,40 @@
-jshint
 
-~/.npm-global/bin/browserify ./app.js > ./mini.js
+
+# install project
+npm install
+
+#compile project
 ~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
 
-how to use browserify
-https://www.youtube.com/watch?v=_dtnD_8Att0&t=309s
+#run project
+run index.html via Live Server
 
-
-run tests:
+#run tests:
 node --experimental-specifier-resolution=node ./test/app-test.js
 
-run test coverage:
-./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "test/*" -r=html node --experimental-specifier-resolution=node ./test/app-test.js 
+#run test coverage:
+./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "node_modules/*" -x "test/*" -r=html node --experimental-specifier-resolution=node ./test/app-test.js 
 
-planet levels
+
+#need to integrate
+jshint
+
+#how to use browserify
+https://www.youtube.com/watch?v=_dtnD_8Att0&t=309s
+
+#planet levels
 https://docs.google.com/spreadsheets/d/1JxAwqzGUT2EWa3vsTIHNlBeMxv247av7qSseUcO_DpY/edit#gid=0
 
-grafics расчитать формулу по паарметрам:How to Convert Graphs to Equations online
+#grafics расчитать формулу по паарметрам:How to Convert Graphs to Equations online
 https://www.desmos.com/calculator/ypmi9ife7p?lang=ru
 
+#проблемы
 не могу использовать деконструктор в параметрах конструктора. Visual Code не умеет переименовывать
 
-
-
-check docs
+#check docs
 https://www.npmjs.com/package/eslint-plugin-jsdoc
 
+#советы
 вывести в браузер стак трейс
 console.trace();
 

@@ -6,7 +6,7 @@ export class Settings {
     maxAsteroidsSameTime = 5
     spawnAsteroidPerSecond = 1
     cameraMode = CameraModeEnum.showPlayer
-    botsAmount = 100
+    botsAmount = 20
     tickerTimeLimitSec = 0 //0 is infinity
 
     constructor() {}
