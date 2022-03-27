@@ -41,7 +41,7 @@ export class Planet {
     constructor(view, scene, fps, name){
         this.view = view
         this.scene = scene 
-        this.transform = new Transform(scene.mapSize);
+        this.transform = new Container()//new Transform(scene.mapSize);
         this.name = name;
         this.isActive = true;
         scene.addPlanet(this)

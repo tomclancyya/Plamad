@@ -3131,7 +3131,8 @@ var Planet = /*#__PURE__*/function () {
 
     this.view = view;
     this.scene = scene;
-    this.transform = new _transform.Transform(scene.mapSize);
+    this.transform = new _pixi.Container(); //new Transform(scene.mapSize);
+
     this.name = name;
     this.isActive = true;
     scene.addPlanet(this);

@@ -1,6 +1,6 @@
 
-/*[test]*/import pixi from "pixi-shim"; const { Container } = pixi;
-/*[production]*///import { Container } from "pixi.js";
+/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
+/*[production]*/import { Container } from "pixi.js";
 import { Vector2 } from "../../utils/vector2";
 
 // пока не используется, но может будем использовать для интерполяции передвижения контейнера в UI

@@ -1,5 +1,5 @@
-/*[test]*/import pixi from "pixi-shim"; const { Application } = pixi;
-/*[production]*///import { Application } from "pixi.js";
+/*[test]*///import pixi from "pixi-shim"; const { Application } = pixi;
+/*[production]*/import { Application } from "pixi.js";
 import { CameraModeEnum, Settings } from "./settings";
 
 export class Camera {
