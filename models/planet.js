@@ -1,4 +1,6 @@
-import { Container } from 'pixi.js';
+
+/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
+/*[production]*/import { Container } from "pixi.js";
 import { Transform } from './transform'
 import { Scene } from './scene';
 import { levels } from './planet-level';
@@ -41,7 +43,7 @@ export class Planet {
     constructor(view, scene, fps, name){
         this.view = view
         this.scene = scene 
-        this.transform = new Container()//new Transform(scene.mapSize);
+        this.transform = new Transform(scene.mapSize);
         this.name = name;
         this.isActive = true;
         scene.addPlanet(this)

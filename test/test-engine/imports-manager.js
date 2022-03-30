@@ -45,7 +45,8 @@ function enableImportForProduction() {
 
 
 function forEachJsFilesDo(callback) {
-    shell.find('./').filter(f => !(f.includes('node_modules.nosync')
+    shell.find('./').filter(f => !(f.includes('node_modules') 
+        || f.includes('node_modules.nosync')
         || f.includes('.git/')
         || f.includes('test/')
         || f.includes('.json')

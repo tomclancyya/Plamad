@@ -6,6 +6,10 @@ npm install
 #compile project
 ~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
 
+#install web server
+plugin -> live server
+
+
 #run project
 run index.html via Live Server
 

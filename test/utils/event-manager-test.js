@@ -1,5 +1,5 @@
 import { EventManager } from "../../utils/event-manager";
-import { done, isEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
+import { done, isBooleanEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
 
 export class EventManagerTest {
     constructor(){}
@@ -24,19 +24,19 @@ export class EventManagerTest {
                     event.subscribe(f2)
                     event.call()
 
-                    isEqual(isCall1, 1)
-                    isEqual(isCall2, 1)
-                    isEqual(event.subscribers.length, 2)
+                    isBooleanEqual(isCall1, 1)
+                    isBooleanEqual(isCall2, 1)
+                    isBooleanEqual(event.subscribers.length, 2)
 
                     event.unsubscribe(f1)
                     event.unsubscribe(f2)
 
-                    isEqual(event.subscribers.length, 0)
+                    isBooleanEqual(event.subscribers.length, 0)
 
                     event.call()
 
-                    isEqual(isCall1, 1)
-                    isEqual(isCall2, 1)
+                    isBooleanEqual(isCall1, 1)
+                    isBooleanEqual(isCall2, 1)
                     return done();
                 },
 
@@ -66,7 +66,7 @@ export class EventManagerTest {
 
                     new TestObject(event, testListener)
                     event.call()
-                    isEqual(testListener.hasCall, true)
+                    isBooleanEqual(testListener.hasCall, true)
                     return done();
                 }
             }
