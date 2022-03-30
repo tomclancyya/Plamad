@@ -12,7 +12,7 @@ export function assert(a, b, isSucccess){
     }    
 }
 
-export function isEqual(a, b){
+export function isBooleanEqual(a, b){
     return assert(a,b, (a == b)) 
 }
 
