@@ -2,7 +2,7 @@ import { Meteor } from "../../models/meteor";
 import { Scene } from "../../models/scene";
 import { CommonView } from "../../ui/common/common-view";
 import { Vector2 } from "../../utils/vector2";
-import { done, isEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
+import { done, isBooleanEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
 
 
 export class SceneTest {
@@ -26,10 +26,10 @@ export class SceneTest {
                     let myPositionCloseToMeteor2 = new Vector2(600,600)
                     let myPositionCloseToMeteor3 = new Vector2(700,700)
                     let myPositionCloseToNobody = new Vector2(7000,7000)
-                    isEqual(scene.getClosestMeteor(myPositionCloseToMeteor1, 1000), meteor1)
-                    isEqual(scene.getClosestMeteor(myPositionCloseToMeteor2, 1000), meteor2)
-                    isEqual(scene.getClosestMeteor(myPositionCloseToMeteor3, 1000), meteor3)
-                    isEqual(scene.getClosestMeteor(myPositionCloseToNobody, 1000), null)
+                    isBooleanEqual(scene.getClosestMeteor(myPositionCloseToMeteor1, 1000), meteor1)
+                    isBooleanEqual(scene.getClosestMeteor(myPositionCloseToMeteor2, 1000), meteor2)
+                    isBooleanEqual(scene.getClosestMeteor(myPositionCloseToMeteor3, 1000), meteor3)
+                    isBooleanEqual(scene.getClosestMeteor(myPositionCloseToNobody, 1000), null)
 
                     return done();
                 }

@@ -5,7 +5,7 @@ import { Scene } from "../../models/scene";
 import { CommonView } from "../../ui/common/common-view";
 import { BaseTimer } from "../../utils/base-timer";
 import { Vector2 } from "../../utils/vector2";
-import { done, isEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
+import { done, isBooleanEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
 import { Random } from "../../engine/random"
 
 
@@ -31,11 +31,11 @@ export class BotTest {
                     scene.meteors = [
                         meteor1
                     ]    
-                    isEqual(planet.transform.position.x, 100)
-                    isEqual(planet.transform.position.y, 100)
-                    isEqual(meteor1.transform.position.x, 110)
-                    isEqual(meteor1.transform.position.y, 100)
-                    isEqual(state.currentDirection, null)   
+                    isBooleanEqual(planet.transform.position.x, 100)
+                    isBooleanEqual(planet.transform.position.y, 100)
+                    isBooleanEqual(meteor1.transform.position.x, 110)
+                    isBooleanEqual(meteor1.transform.position.y, 100)
+                    isBooleanEqual(state.currentDirection, null)   
                     state.update(0)         
                     isVector2Equal(state.currentDirection, new Vector2(1,0))    
                     
@@ -58,9 +58,9 @@ export class BotTest {
                         return new Vector2(0.5, 0.5)
                     }
                     let state = new MovingState(planet, scene, random, timer)                  
-                    isEqual(planet.transform.position.x, 100)
-                    isEqual(planet.transform.position.y, 100)
-                    isEqual(state.currentDirection, null)  
+                    isBooleanEqual(planet.transform.position.x, 100)
+                    isBooleanEqual(planet.transform.position.y, 100)
+                    isBooleanEqual(state.currentDirection, null)  
                     state.start()
                     isVector2Equal(state.currentDirection, new Vector2(0.5,0.5))   
 
@@ -80,7 +80,7 @@ export class BotTest {
                         return true;
                     }
                     state.update(0)
-                    isEqual(state.nextState, "SearchAndAttackState")
+                    isBooleanEqual(state.nextState, "SearchAndAttackState")
      
 
                     return done();
@@ -90,10 +90,10 @@ export class BotTest {
                     let planet = new Planet(new TestView(), scene, 40, "bot1")
                     planet.transform.position = new Vector2(0,0)
                     planet.transform.move(new Vector2(0, 0))
-                    isEqual(planet.transform.isCollideBorder(), true)
+                    isBooleanEqual(planet.transform.isCollideBorder(), true)
                     planet.transform.move(new Vector2(0.01, 0.01))
                     // is it failing now? so, check epsilon in math file
-                    isEqual(planet.transform.isCollideBorder(), false)
+                    isBooleanEqual(planet.transform.isCollideBorder(), false)
                     return done();
                 }
             }
