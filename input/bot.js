@@ -50,8 +50,7 @@ export class Bot {
         if (this.stateManager && this.stateManager.currentState && this.stateManager.currentState.currentDirection) {
             vector2 = this.stateManager.currentState.currentDirection
         }
-        //let vector2 = this.stateManager?.currentState?.currentDirection;
-
+       
         if (!vector2)
             vector2 = new Vector2()
 

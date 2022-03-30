@@ -35,7 +35,7 @@ export class MathTest {
                 let result = sqrt(16)
                 return isNumberEqual(result, 4);     
             },
-            "should return 9 when take 3 squared": () => {
+            "should return 9 when take 3 in the 2 power": () => {
                 let result = sqr(3, 2)
                 return isNumberEqual(result, 9); 
             },
