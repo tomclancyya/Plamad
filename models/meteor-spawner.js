@@ -1,4 +1,5 @@
-import { Container } from "pixi.js";
+/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
+/*[production]*/import { Container } from "pixi.js";
 import { Random } from "../engine/random";
 import { Ticker } from "../engine/ticker";
 import { MeteorView } from "../ui/meteor-view";
@@ -16,12 +17,9 @@ export class MeteorSpawner {
      * @param {GameContext} context 
      * @param {Random} random 
      * @param {Scene} scene 
-     * @param {Container} pixiStage 
-     * @param {number} maxAmount 
-     * @param {number} spawnPerSecond 
-     * @param {typeof MeteorView} meteorViewClass - will move MeteorView class reference upper
+     * @param {Container} stage 
      */
-    constructor(context, scene, stage){
+    constructor(context, scene, stage, meteorViewClass){
         this.timer = new Timer(context.settings.spawnAsteroidPerSecond);
         this.scene = scene;
         this.random = context.random;

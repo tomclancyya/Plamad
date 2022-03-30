@@ -7,7 +7,7 @@ npm install
 ~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
 
 #install web server
-plugin -> live server
+vs code plugin -> install live server
 
 
 #run project
@@ -47,6 +47,12 @@ https://github.com/NativeScript/canvas/issues/52
 https://github.com/pixijs/pixijs/issues/4769
 можно использовать специальный проект, который может пикси запустить на 
 https://github.com/Prozi/pixi-shim
+
+#почему используешь костыль с импортами pixijs и комментами аля /*[production]*/
+не хочу собирать проект через babel для тестирования
+изза того что требует доп шагов для настройки
+а также бабел собирает все в один файл (а при запуске тестов удобно знать в каком файле обвалилось)
+не факт что visual studio сможет понять импорт для подсказок
 
 
 

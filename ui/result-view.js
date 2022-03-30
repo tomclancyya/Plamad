@@ -1,4 +1,3 @@
-import { ObservablePoint } from "pixi.js";
 import { BackgroundView } from "./background-view";
 import { Button } from "./button-view";
 import { ResultViewSettings, ResultViewType } from "./result-view-settings";
