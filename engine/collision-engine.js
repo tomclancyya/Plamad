@@ -28,11 +28,11 @@ export class CollisionEngine {
     /** 
     * @param {Scene} scene  
     */
-    constructor(scene, fps) {
+    constructor(scene) {
         this.scene = scene
     }
 
-    isPlanetCollidesPlanet() {
+    checkPlanetsCollision() {
         let planets = this.getPlanets()
         for (let i = 0; i < planets.length; i++) {
             for (let j = i + 1; j < planets.length; j++) {
@@ -41,15 +41,14 @@ export class CollisionEngine {
                 if (planet1 == planet2)
                     continue;
 
-                planet1.onCollidePlanet(planet2);
+                planet1.checkPlanetCollision(planet2);
             }
         }
     }
 
-    isPlanetCollidesMeteor() {
-
+    checkPlanetsWithMeteorsCollision() {
         let planets = this.getPlanets()
         let meteors = this.getMeteors()
-        planets.map(planet => meteors.map(meteor => planet.onCollideMeteor(meteor)))
+        planets.map(planet => meteors.map(meteor => planet.checkMeteorCollision(meteor)))
     }
 }

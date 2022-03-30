@@ -70,7 +70,7 @@ export class Planet {
         this.view.container.position.y = this.transform.position.y
     }
 
-    onCollideMeteor(meteor){
+    checkMeteorCollision(meteor){
         if (!this.isActive)
             return false;
 
@@ -84,7 +84,7 @@ export class Planet {
      * 
      * @param {Planet} planet 
      */
-    onCollidePlanet(planet){
+    checkPlanetCollision(planet){
         if (!this.isActive || !planet.isActive)
             return false;
 

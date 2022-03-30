@@ -169,8 +169,8 @@ export class GameplayService {
                 inputManager.addInput(b.getDirection())
             })
             inputDriver.networkTick(delta);
-            collision.isPlanetCollidesMeteor();
-            collision.isPlanetCollidesPlanet();
+            collision.checkPlanetsWithMeteorsCollision();
+            collision.checkPlanetsCollision();
             meteorSpawner.networkUpdate(delta);
             scene.getPlanets().map((planet) => {
                 planet.networkTick()
