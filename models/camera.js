@@ -1,5 +1,5 @@
-/*[test]*///import pixi from "pixi-shim"; const { Application } = pixi;
-/*[production]*/import { Application } from "pixi.js";
+/*[test]*///import pixi from "pixi-shim"; const { Application, Container } = pixi;
+/*[production]*/import { Application, Container } from "pixi.js";
 import { CameraModeEnum, Settings } from "./settings";
 
 export class Camera {
@@ -14,6 +14,10 @@ export class Camera {
         this.settings = settings
     }
 
+    /**
+     * 
+     * @param {Container} stage 
+     */
     setMenuMode(stage){
         stage.position.x = 0;
         stage.position.y = 0;
@@ -38,6 +42,10 @@ export class Camera {
         }
     }
 
+    /**
+     * 
+     * @param {Container} stage 
+     */
     setFollowPlayerMode(stage){
         //(0,0) for us is center of the screen
         stage.position.x = this.app.renderer.width/2;
@@ -47,6 +55,10 @@ export class Camera {
         stage.scale.set(0.4) 
     }
 
+    /**
+     * 
+     * @param {Container} stage 
+     */
     setSeeWholeMapMode(stage){
 
         let mapSize = this.settings.mapSize

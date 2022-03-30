@@ -13,7 +13,7 @@ export class Ticker {
         this.ticks = 0
 
         
-        this.interval = setInterval(() => {
+        this.interval = this.setInterval(() => {
             this.ticks++;
             if (limit != 0 && this.ticks > tickPerSeconds * limit) {
                 this.ticks = 0;
@@ -24,8 +24,17 @@ export class Ticker {
         }, delta)
     }
 
+    setInterval(callback, delta) {
+        return setInterval(callback, delta)
+    }
+
+    clearInterval(interval){
+        clearInterval(interval)
+    }
+
+
     stop() {
-        clearInterval(this.interval)
+        this.clearInterval(this.interval)
     }
 }
 
