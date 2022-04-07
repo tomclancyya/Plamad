@@ -16,6 +16,10 @@ run index.html via Live Server
 #run tests:
 node --experimental-specifier-resolution=node ./test/app-test.js
 
+#change environment
+node --experimental-specifier-resolution=node ./test/test-engine/imports-manager.js test
+node --experimental-specifier-resolution=node ./test/test-engine/imports-manager.js production
+
 #run test coverage:
 ./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "node_modules/*" -x "test/*" -r=html node --experimental-specifier-resolution=node ./test/app-test.js 
 
