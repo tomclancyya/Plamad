@@ -16,7 +16,7 @@ run index.html via Live Server
 #run tests:
 node --experimental-specifier-resolution=node ./test/app-test.js
 
-#change environment
+#change environment:
 node --experimental-specifier-resolution=node ./test/test-engine/imports-manager.js test
 node --experimental-specifier-resolution=node ./test/test-engine/imports-manager.js production
 
