@@ -26,6 +26,10 @@ export class Vector2 {
         return (M.isEqual(this.x, b.x) && M.isEqual(this.y, b.y))
     }
 
+    isNotEqual(b){
+        return !this.isEqual(b)
+    }
+   
     flipY(){
         return new Vector2(this.x, -this.y)
     }
