@@ -32,7 +32,7 @@ export class RandomTest {
                 let result2 = random2.getVector()             
                 return isVector2NotEqual(result, result2)
             },        
-            "return random value within range ....": () => {
+            "return random value within range -2,-1": () => {
                 let randomizer = new Prando (1)
                 let random = new Random (randomizer)
                 let min = -2
@@ -45,7 +45,7 @@ export class RandomTest {
                 let isYInsideRange = (y >= min && y <= max)
                 return isBooleanEqual(isYInsideRange, true)                                        
             },        
-            "return random value within range ....": () => {
+            "return random value within range -100,0": () => {
                 let randomizer = new Prando (1)
                 let random = new Random (randomizer)
                 let min = -100
@@ -58,7 +58,7 @@ export class RandomTest {
                 let isYInsideRange = (y >= min && y <= max)
                 return isBooleanEqual(isYInsideRange, true)                                        
             },        
-            "return random value within range ....": () => {
+            "return random value within range 0,2": () => {
                 let randomizer = new Prando (1)
                 let random = new Random (randomizer)
                 let min = 0
