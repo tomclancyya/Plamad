@@ -32,7 +32,7 @@ export class RandomTest {
                 let result2 = random2.getVector()             
                 return isVector2NotEqual(result, result2)
             },        
-            "return values in diapazone -2 and 2": () => {
+            "return random value within range ....": () => {
                 let randomizer = new Prando (1)
                 let random = new Random (randomizer)
                 let min = -2
@@ -45,7 +45,7 @@ export class RandomTest {
                 let isYInsideRange = (y >= min && y <= max)
                 return isBooleanEqual(isYInsideRange, true)                                        
             },        
-            "return values in diapazone -100 and 0": () => {
+            "return random value within range ....": () => {
                 let randomizer = new Prando (1)
                 let random = new Random (randomizer)
                 let min = -100
@@ -58,7 +58,7 @@ export class RandomTest {
                 let isYInsideRange = (y >= min && y <= max)
                 return isBooleanEqual(isYInsideRange, true)                                        
             },        
-            "return values in diapazone 0 and 2": () => {
+            "return random value within range ....": () => {
                 let randomizer = new Prando (1)
                 let random = new Random (randomizer)
                 let min = 0
@@ -72,10 +72,6 @@ export class RandomTest {
                 return isBooleanEqual(isYInsideRange, true)                                        
             }
               
-        }}
-        // test with seed 2
-        // test values of seed 2 <> values seed 1 
-        // getVectorSquare (-2,2), 0,2 -100, 0
-        //  key word : random seed, randomier, determination
+        }}       
     }
 }
