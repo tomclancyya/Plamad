@@ -5,6 +5,7 @@ import { Vector2Test } from "./utils/vector2-test.js";
 import { SceneTest } from "./models/scene-test.js";
 import { BotTest } from "./models/bot-test.js";
 import { MathTest } from "./utils/math-test.js";
+import { TimerTest } from "./utils/timer-test.js";
 import { RandomTest } from "./utils/random-test.js";
 
 console.log('')
@@ -18,3 +19,4 @@ testEngine.runTest(new Vector2Test())
 testEngine.runTest(new InputTest())
 testEngine.runTest(new EventManagerTest())
 testEngine.runTest(new RandomTest())
+testEngine.runTest(new TimerTest())
