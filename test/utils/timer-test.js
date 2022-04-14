@@ -10,29 +10,22 @@ export class TimerTest {
             "timer should":
             {
                 "stop the countdown in 5 sec": () => {
-                    let timer = new Timer (5000)                    
-                    console.log(timer.currentTime/1000);
-                    console.log('isFinished =', timer.isFinished());
-                    timer.update (1000); 
-                    console.log(timer.currentTime/1000);
-                    console.log('isFinished =', timer.isFinished());
-                    timer.update (1000); 
-                    console.log(timer.currentTime/1000);
-                    console.log('isFinished =', timer.isFinished());
-                    timer.update (1000); 
-                    console.log(timer.currentTime/1000);
-                    console.log('isFinished =', timer.isFinished());
-                    timer.update (1000); 
-                    console.log(timer.currentTime/1000);
-                    console.log('isFinished =', timer.isFinished());
-                    timer.update (1000); 
-                    console.log(timer.currentTime/1000);
-                    console.log('isFinished =', timer.isFinished());
+                    let timer = new Timer (5000)       
+                    isBooleanEqual(timer.isFinished(),false);                    
+                    timer.update (1000);                   
+                    isBooleanEqual(timer.isFinished(),false);
+                    timer.update (1000);
+                    isBooleanEqual(timer.isFinished(),false);
+                    timer.update (1000);
+                    isBooleanEqual(timer.isFinished(),false);
+                    timer.update (1000);
+                    isBooleanEqual(timer.isFinished(),false);
+                    timer.update (1000);                                   
                     return isBooleanEqual(timer.isFinished(),true)   
                 },
                 "return true when the value of current time = 0": () => {
-                    let timer = new Timer (0)                                                                                             
-                    return isNumberEqual(timer.currentTime, 0)
+                    let timer = new Timer (0)  
+                    return isBooleanEqual(timer.isFinished(), true)
                 },
 
                 "get the initial value after reset": () => {
@@ -41,12 +34,10 @@ export class TimerTest {
                     timer.update (1000); 
                     timer.update (1000); 
                     timer.update (1000); 
-                    timer.update (1000);                     
-                    console.log();
-                    console.log('Current time = ', timer.currentTime);
-                    console.log('isFinished with the current time = ', timer.isFinished());                                
-                    timer.reset()    
-                    console.log('isFinished after reset = ', timer.isFinished());                                        
+                    timer.update (1000);                                      
+                    isBooleanEqual(timer.isFinished(),true)
+                    timer.reset()                        
+                    isBooleanEqual(timer.isFinished(), false)
                     return isNumberEqual(timer.currentTime, 5000)
                 }
                 
