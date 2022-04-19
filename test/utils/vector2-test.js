@@ -31,10 +31,49 @@ export class Vector2Test {
                         let v2 = new Vector2(assertion[1][0], assertion[1][1])
                         isVector2Equal(v1.getNormalized(), v2)
                     })
-                    return done()
+                    return done()               
+                               
+                },
+                "return Vector(0,0)": () => {
+                let zero = new Vector2(0, 0)                
+                return isVector2Equal(new Vector2(4,5).getZero(), zero);
+                },
+                "return fliped Vector": () => {
+                let fliped = new Vector2(4, -5)                
+                return isVector2Equal(new Vector2(4, 5).flipY(), fliped);
+                },
+                "return sum of two vectors": () => {
+                let initial = new Vector2(5, 6)                
+                return isVector2Equal(new Vector2(0, 1).add(new Vector2(5,5)), initial); 
+                },
+                "return difference of two vectors": () => {
+                let initial = new Vector2(5, 6)                
+                return isVector2Equal(new Vector2(7, 7).substract(new Vector2(2,1)), initial); 
+                },
+                "return product of two vectors": () => {
+                let initial = new Vector2(2, 6)                
+                return isVector2Equal(new Vector2(1, 3).multiValue(2), initial); 
+                
+                },
+                "return trimed values of Vector": () => {
+                let trim = new Vector2(10,6).trim(1,8);                
+                return isVector2Equal(trim,new Vector2(8,6))
+                
+                },
+                "return Manhattan distance = 5 between points of (5,7) and (4,3)": () => {                
+                let mdistance = new Vector2(5,7).manhattanDistance(new Vector2(4,3));                
+                return isNumberEqual(mdistance, 5)
+                
+                },
+                "return distance ~4.123 between points of (5,7) and (4,3)": () => {                
+                let distance = new Vector2(5,7).getDistance(new Vector2(4,3));                
+                return isNumberEqual(distance, 4.123)
+                
                 }
+
                 
             }
         }
+ 
     }
 }
