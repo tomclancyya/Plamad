@@ -2,6 +2,7 @@ import { Vector2 } from "../../utils/vector2"
 import { done, isBooleanEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
 
 export class Vector2Test {
+    constructor(){}
     getTests() {
         return {
             "vector2 should":
