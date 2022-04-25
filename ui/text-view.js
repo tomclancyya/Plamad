@@ -29,7 +29,7 @@
      */
     text = null;
      
-    constructor (x, y, text, parent, size = 50) {
+    constructor (x, y, text, parent, size = 50, align = 'center') {
         let PIXI = require('pixi.js');
         let button = new PIXI.Graphics();
         let container = new PIXI.Container();
@@ -39,7 +39,12 @@
         })
 
         let textObject = new PIXI.Text(text, textStyle);
-        textObject.anchor.set(0.5)
+        if (align == 'center')
+            textObject.anchor.set(0.5, 0.5)
+
+        if (align == 'left')
+            textObject.anchor.set(0, 0.5)
+
         textObject.resolution = 4;
 
         container.addChild(button);

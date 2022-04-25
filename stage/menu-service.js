@@ -14,10 +14,10 @@ export class MenuService {
     */
     constructor(context) {
         new MenuView(context, () => {
-            context.settings.cameraMode = CameraModeEnum.showPlayer
+            context.settings.dynamicSettings.cameraMode = CameraModeEnum.showPlayer
             context.loadGameplay();
         }, ()=>{
-            context.settings.cameraMode = CameraModeEnum.showMap
+            context.settings.dynamicSettings.cameraMode = CameraModeEnum.showMap
             context.loadGameplay();
 
         }, ()=>{}, ()=>{});

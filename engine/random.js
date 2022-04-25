@@ -17,7 +17,7 @@ export class Random {
     }
 
     /**
-     * 
+     * returns random vector(x,y) where x bettween (-1, 1) and y between (-1, 1)
      * @param {number} min include
      * @param {number} max include
      */

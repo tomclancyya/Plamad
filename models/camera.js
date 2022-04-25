@@ -26,7 +26,7 @@ export class Camera {
     }
 
     setCameraBySettings(stage){
-        let cameraMode = this.settings.cameraMode
+        let cameraMode = this.settings.dynamicSettings.cameraMode
         switch (cameraMode) {
             case CameraModeEnum.showPlayer:
                 this.setFollowPlayerMode(stage)

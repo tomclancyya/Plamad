@@ -20,7 +20,8 @@
     "pixi-shim": "^2.3.7",
     "pixi.js": "^6.1.2",
     "prando": "^6.0.1",
-    "shelljs": "^0.8.4"
+    "shelljs": "^0.8.4",
+    "ws": "^8.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.15.0",

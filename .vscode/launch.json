@@ -9,6 +9,11 @@
             "type": "node",
             "request": "launch",
             "args": ["--experimental-specifier-resolution=node", "${workspaceFolder}/test/app-test.js"]
-          }
+        },{
+            "name": "run test",
+            "type": "node",
+            "request": "launch",
+            "args": ["--experimental-specifier-resolution=node", "${workspaceFolder}/test.js"]
+        }
     ]
 }

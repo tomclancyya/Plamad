@@ -2,14 +2,11 @@
 
 export class BackgroundView {
 
-    constructor(parent){
+    constructor(parent, width = 500, height = 500, alpha = 1){
         let PIXI = require('pixi.js');
 
         let back = new PIXI.Graphics();
-
-        let width = 500
-        let height = 500
-
+        back.alpha = alpha
         back.beginFill(0x332211)
         back.drawRect(0, 0, width, height);
         back.endFill();

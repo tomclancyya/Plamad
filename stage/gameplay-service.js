@@ -14,6 +14,11 @@ import { TextView } from '../ui/text-view';
 import { ResultView } from '../ui/result-view';
 import { ResultViewSettings, ResultViewType } from '../ui/result-view-settings';
 import { CameraModeEnum } from '../models/settings';
+import { InfoView } from '../ui/info-view';
+import { NetworkService } from '../engine/network-service';
+import { info } from '../node_modules.nosync/log-symbols';
+import { GameEvent, GameEventEnum, GameEventManager } from '../input/game-events-manager';
+import { StarView } from '../ui/star-view';
 
 export class GameplayService {
   
@@ -39,10 +44,13 @@ export class GameplayService {
         let ui = app.stage.getChildByName("ui")
         let gameplay = app.stage.getChildByName("gameplay")
 
+        let infoView = new InfoView(ui)
+
         let inputManager = context.input
         
         function createTile(x, y){
-            new Button(x, y, 100, 100, '', '0x111111', gameplay, () => {});
+            //new Button(x, y, 100, 100, '', '0x111111', gameplay, () => {});
+            new StarView(x, y, gameplay)
         }
 
         let mapSize = context.settings.mapSize
@@ -78,12 +86,15 @@ export class GameplayService {
         new CenterCoordinatesView(100, null, gameplay)
         new CenterCoordinatesView(null, 100, gameplay)
 
+        
+
         let inputDriver = new GameInputDriver(context.input, scene)
 
         let tickers = []
 
         let scoreView = new TextView(250, 50, "123567", ui)
         let button = new Button(450, 50, 100, 100, "☰", "white", ui, () => {
+            infoView.addMessage("open menu")
             let viewSettings = new ResultViewSettings()
             viewSettings.playerScore = planet.score
             viewSettings.resultViewType = ResultViewType.LevelMenu
@@ -102,27 +113,29 @@ export class GameplayService {
         engineTickerSetting.tickPerSeconds = context.settings.engineFps
         engineTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
 
+        // UI tick
         tickers.push(new Ticker(engineTickerSetting, (delta) => {
             let pos = planet.transform.position;    
         
             //move camera
-            if (context.settings.cameraMode == CameraModeEnum.showPlayer) {
+            if (context.settings.dynamicSettings.cameraMode == CameraModeEnum.showPlayer) {
                 let zoom = planet.getLevelStat().zoom
                 gameplay.pivot.set(pos.x, pos.y);
                 gameplay.scale.set(zoom) 
                 //ui.scale.set(zoom,zoom) 
             }
 
-            if (context.settings.cameraMode == CameraModeEnum.showMap)
+            if (context.settings.dynamicSettings.cameraMode == CameraModeEnum.showMap)
                 gameplay.pivot.set(context.settings.mapSize / 2,context.settings.mapSize / 2);
 
             scoreView.setText(planet.level + "")
 
             scene.getObjects().map(t => t.tick(delta))
+
+            infoView.tick(delta)
         }))       
 
         // tick driver (temporary use simple ticker)
-
         tickers.push(new Ticker(engineTickerSetting, (delta) => {
           
             //check score
@@ -157,25 +170,81 @@ export class GameplayService {
                 }
         }))
 
+        let network = new NetworkService(context.settings, 
+            infoView
+        )
+
+        network.connect()
+
+        let gameEvents = new GameEventManager()
 
         let networkTickerSetting = new TickerSettings()
-        networkTickerSetting.tickPerSeconds = 20
+        networkTickerSetting.tickPerSeconds = 5 // assume we will have 1 event per 200ms from server
         networkTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
         
+        
+        network.defaultDelta = 1000 / networkTickerSetting.tickPerSeconds
         // network tick driver
+        // отправляем интпут события серверу 
         tickers.push(new Ticker(networkTickerSetting, (delta) => {
             bots.map(b => { 
                 b.tick(delta);
                 inputManager.addInput(b.getDirection())
+            })  
+            
+            inputManager.getInputs().map((input) => {
+                network.sendInputMessage(input)
             })
-            inputDriver.networkTick(delta);
-            collision.checkPlanetsWithMeteorsCollision();
-            collision.checkPlanetsCollision();
-            meteorSpawner.networkUpdate(delta);
-            scene.getPlanets().map((planet) => {
-                planet.networkTick()
-            })
+
+            network.tick(delta)
         }))
 
+        // можно добавлять все события из сети добавлƒь в gameEventManager, 
+        // причем консьюмеро будет сдвигать офсет
+        // а гейм консьюмер будет хранить всю игру в виде событий 
+        network.onReceiveNetworkTick = (delta) => {
+            //infoView.addMessage("got network tick")
+            let event = new GameEvent()
+            event.delta = network.defaultDelta
+            event.eventType = GameEventEnum.Tick
+            event.inputEvent = null
+            gameEvents.addEvent(event)            
+        }
+
+        network.onReceivedInputMessage = (message) => {
+            //infoView.addMessage("got network message from " + message.inputId)
+            let event = new GameEvent()
+            event.delta = network.defaultDelta
+            event.eventType = GameEventEnum.PlayerMove
+            event.inputEvent = message
+            gameEvents.addEvent(event)
+        }
+
+        // game state update to consume game events. should update fast as possible
+        let fastTickerSettings = new TickerSettings()
+        fastTickerSettings.tickPerSeconds = 60
+        fastTickerSettings.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
+        tickers.push(new Ticker(fastTickerSettings, (delta) => {
+            gameEvents.getEvents(10).map((event) => {
+                if (event) {
+                    switch (event.eventType) {
+                        case GameEventEnum.PlayerMove:
+                            inputDriver.setPlanetInput(event.inputEvent, event.delta)
+                            break;
+    
+                        case GameEventEnum.Tick:
+                            collision.checkPlanetsWithMeteorsCollision();
+                            collision.checkPlanetsCollision();
+                            meteorSpawner.networkUpdate(event.delta);
+                            scene.getPlanets().map((planet) => {
+                                planet.networkTick()
+                            })
+                            break;                
+                        default:
+                            break;
+                    }
+                } 
+            })
+        }))
     }
 }

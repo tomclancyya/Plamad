@@ -45,10 +45,6 @@ export class GameContext {
     /** @type {Settings} */
     settings = new Settings()
 
-    dynamicSettings = {
-        cameraTarget: null
-    }
-
     constructor(app, input, random){
         this.app = app;
         this.input = input;
