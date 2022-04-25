@@ -17,7 +17,7 @@ export class Timer extends BaseTimer {
     }
 
     isFinished(){
-        return this.currentTime < 0;
+        return this.currentTime <= 0;
     }
 
     reset() {
