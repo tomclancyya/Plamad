@@ -1,7 +1,6 @@
 
 import { InputInternal } from "../input/input-internal";
 import { NetworkMode, Settings } from "../models/settings";
-import { info } from "../node_modules.nosync/log-symbols";
 import { InfoView } from "../ui/info-view";
 import { Ticker, TickerSettings } from "./ticker";
 

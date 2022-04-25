@@ -16,7 +16,6 @@ import { ResultViewSettings, ResultViewType } from '../ui/result-view-settings';
 import { CameraModeEnum } from '../models/settings';
 import { InfoView } from '../ui/info-view';
 import { NetworkService } from '../engine/network-service';
-import { info } from '../node_modules.nosync/log-symbols';
 import { GameEvent, GameEventEnum, GameEventManager } from '../input/game-events-manager';
 import { StarView } from '../ui/star-view';
 
