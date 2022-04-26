@@ -51,7 +51,7 @@ export class Vector2Test {
                     })
                     return done()
                 },
-                "return flipped Vector as expected": () => {
+                "return flipped by Y axis Vector as expected": () => {
                     let vectorsForAssertions = [
                         //[input, expected]
                         [[4, 5], [4, -5]],
