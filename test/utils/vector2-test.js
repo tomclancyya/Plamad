@@ -169,9 +169,7 @@ export class Vector2Test {
                         let expected = assertion[2][0]
                         isNumberEqual(v1.getDistance(v2), expected)
                     })
-                    return done()
-                    let result = new Vector2(5, 7).getDistance(new Vector2(4, 3));
-                    return isNumberEqual(result, 4.123)
+                    return done()                    
                 }
             }
         }
