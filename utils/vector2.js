@@ -58,7 +58,7 @@ export class Vector2 {
      * @returns 
      */
     manhattanDistance(otherVector2){
-        return  Math.abs (x1 - x2) + Math.abs (y1 - y2)
+        return  Math.abs (this.x - otherVector2.x) + Math.abs (this.y - otherVector2.y)
     } 
 
     /**
