@@ -46,10 +46,16 @@ export class Vector2 {
         return new Vector2(M.multi(this.x, a), M.multi(this.y, a))
     }
     
-    trim(min, max){
-        let trimMin = new Vector2(Math.max(this.x, min), Math.max(this.y, min))
-        let trimMax = new Vector2(Math.min(trimMin.x, max), Math.min(trimMin.y, max))
-        return trimMax;
+    /** 
+     * fits (inscribes) vector into a given area
+     * @param {number} min
+     * @param {number} max
+     * @returns {Vector2} 
+    */
+    inscribe(min, max){
+        let inscribeMin = new Vector2(Math.max(this.x, min), Math.max(this.y, min))
+        let inscribeMax = new Vector2(Math.min(inscribeMin.x, max), Math.min(inscribeMin.y, max))
+        return inscribeMax;
     }
 
     /**
