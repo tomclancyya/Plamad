@@ -10,7 +10,7 @@ export class CameraTest {
         return {
             "Camera should":
             {
-                "return settings for the Menu Mode": () => {
+                "set container scale as 1 and position as 0 and pivot as 0 for setMenuMode method": () => {
                     let container = new ContainerMock()
                     let camera = new Camera(null, null)
                     camera.setMenuMode(container)
@@ -21,7 +21,7 @@ export class CameraTest {
                     isNumberEqual(container.pivot.y, 0);
                     return done()
                 },
-                "return settings for the 'See Whole Map' Mode": () => {
+                "set container scale as 0.12 and position X as 400 and position Y as 300 for setSeeWholeMapMode method": () => {
                     let container = new ContainerMock()
                     let application = new ApplicationMock()
                     let camera = new Camera(application, new Settings())
@@ -31,7 +31,7 @@ export class CameraTest {
                     isNumberEqual(container.scale.x, 0.12);
                     return done()
                 },
-                "return settings for the 'Follow Player' Mode": () => {
+                "set container scale as 0.4 and position X as 400 and position Y as 300 for setFollowPlayerMode method": () => {                
                     let container = new ContainerMock()
                     let application = new ApplicationMock()
                     let camera = new Camera(application, null)
@@ -41,7 +41,7 @@ export class CameraTest {
                     isNumberEqual(container.scale.x, 0.4);
                     return done()
                 },
-                "return settings for Camera when the 'Show Player' Mode": () => {
+                "set container scale as 0.4 and position X as 400 and position Y as 300 when Camera in showPlayer mode": () => {                                
                     let container = new ContainerMock()
                     let application = new ApplicationMock()
                     let camera = new Camera(application, new Settings())
@@ -51,7 +51,7 @@ export class CameraTest {
                     isNumberEqual(container.scale.x, 0.4);
                     return done()
                 },
-                "return settings for Camera when the 'Show Map' Mode": () => {
+                "set container scale as 0.12 and position X as 400 and position Y as 300 when Camera in showMap mode": () => {                                                
                     let container = new ContainerMock()
                     let application = new ApplicationMock()
                     let modify = new Settings
@@ -63,7 +63,7 @@ export class CameraTest {
                     isNumberEqual(container.scale.x, 0.12);
                     return done()
                 },
-                "return settings for Camera when the 'Show Bot' Mode": () => {
+                "set container scale as 0.4 and position X as 400 and position Y as 300 when Camera in showBot mode": () => {                                                
                     let container = new ContainerMock()
                     let application = new ApplicationMock()
                     let modify = new Settings
