@@ -38,16 +38,16 @@ export class Vector2Test {
                 },
                 "return Vector(0,0)": () => {
                     let vectorsForAssertions = [
-                        [4, 5],
-                        [-100, -100],
-                        [0.0001259006094480597, 0.031479597797496206],
-                        [0, 0],
-                        [1, 0]
+                        [[4, 5]],
+                        [[-100, -100]],
+                        [[0.0001259006094480597, 0.031479597797496206]],
+                        [[0, 0]],
+                        [[1, 0]]
                     ]
                     vectorsForAssertions.map((assertion) => {
                         let result = new Vector2(assertion[0][0], assertion[0][1])
-                        let expected = new Vector2(0, 0)
-                        isVector2Equal(result, expected)
+                        let expected = new Vector2(0, 0)                        
+                        isVector2Equal(result.getZero(), expected)
                     })
                     return done()
                 },
@@ -115,7 +115,7 @@ export class Vector2Test {
                     })
                     return done()
                 },
-                "return trimmed values of Vector as expected": () => {
+                "return values of inscribed Vector as expected": () => {
                     let vectorsForAssertions = [
                         //[input, expected]
                         [[10, 6], [1, 8], [8, 6]],
@@ -131,7 +131,7 @@ export class Vector2Test {
                         let min = assertion[1][0]
                         let max = assertion[1][1]
                         let v3 = new Vector2(assertion[2][0], assertion[2][1])
-                        isVector2Equal(v1.trim(min, max), v3)
+                        isVector2Equal(v1.inscribe(min, max), v3)
                     })
                     return done()
                 },
