@@ -13,7 +13,7 @@ export class Transform {
     
     move(vectorDelta){
         let newPosition = this.position.add(vectorDelta);
-        this.position = newPosition.trim(0 + this.size / 2, this.mapSize - this.size / 2);
+        this.position = newPosition.inscribe(0 + this.size / 2, this.mapSize - this.size / 2);
     }
 
     moveToPosition(position){
