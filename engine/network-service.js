@@ -26,6 +26,8 @@ export class NetworkService {
         this.settings = settings
         this.infoView = infoView
 
+        this.defaultDelta = 1000 / settings.networkFps
+
         if (this.settings.dynamicSettings.networkMode == NetworkMode.local) {
             this.isLocalMode = true;
         }
@@ -59,10 +61,7 @@ export class NetworkService {
             console.log('connected to server')
             this.infoView.addMessage(event.data) 
         }
-        //webSocketClient.send("pidor")
         webSocketClient.onmessage = (event) => {
-            //this.infoView.addMessage(event.data) 
-
             console.log(event)
 
 
@@ -71,11 +70,14 @@ export class NetworkService {
                  * @type {Message}
                  */
                 let message = JSON.parse(event.data)
-                //if (message.message) {
-                    this.onReceiveNetworkTick(message.delta)   
-                    //TODO: parse type of message to trigger proper event   
+                if (message.type == MessageTypeEnum.Tick) {
+                    this.onReceiveNetworkTick(message.delta)
+                }   
+
+                if (message.type == MessageTypeEnum.PlayerMove) {
                     this.onReceivedInputMessage(message.message)
-                //}
+                }  
+                
                 
             } catch (error) {
                 console.error(error)
@@ -103,8 +105,9 @@ export class NetworkService {
             }
 
             let networkMessage = new Message()
-            networkMessage.senderId = "player1"
+            networkMessage.senderId = message.inputId
             networkMessage.message = message
+            networkMessage.type = MessageTypeEnum.PlayerMove
             networkMessage.delta = this.defaultDelta
             this.webSocketClient.send(JSON.stringify(networkMessage))
         }    
@@ -144,6 +147,11 @@ export class Message {
      */
     delta
 
+    /**
+     *  @type {String} MessageTypeEnum
+     */
+     type = MessageTypeEnum.None
+
      /** 
      * @type {String}
      * @public
@@ -151,4 +159,11 @@ export class Message {
     message
     
     constructor(){}
+}
+
+export const MessageTypeEnum = {
+    None: "None",
+    Tick: "Tick",
+    PlayerMove: "PlayerMove",
+    GameStart: "GameStart"
 }

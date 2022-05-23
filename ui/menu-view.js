@@ -23,7 +23,7 @@ export class MenuView {
       createMenuButton(250, 25 + 50, 'Single Player', context.app.stage, () => { this.close(); singlePlayerClick() }).container,
       createMenuButton(250, 25 + 50 + 100 + 20, 'Only bots', context.app.stage, () => { this.close(); onlyBotsClick() }).container,
       createMenuButton(250, 25 + 50 + 100 + 20 + 100 + 20,'Multiplayer', context.app.stage, multiplayerClick).container,
-      createMenuButton(250, 25 + 50 + 100 + 20 + 100 + 20 + 100 + 20, 'Settings', context.app.stage, settingsClick).container,
+      createMenuButton(250, 25 + 50 + 100 + 20 + 100 + 20 + 100 + 20, 'Multiplayer bots', context.app.stage, settingsClick).container,
     ]
   }
 

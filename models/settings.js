@@ -1,6 +1,7 @@
 export class Settings {
     uiFps = 60
     engineFps = 30
+    networkFps = 5 // assume we will have 1 event per 200ms from server
     mapSize = 4000
     maxAsteroids = 400
     maxAsteroidsSameTime = 10
@@ -22,7 +23,7 @@ export const CameraModeEnum = {
 }
 
 export class DynamicSettings {
-    networkMode = NetworkMode.online
+    networkMode = NetworkMode.local
     cameraMode = CameraModeEnum.showPlayer
 }
 

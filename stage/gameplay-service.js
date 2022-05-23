@@ -178,11 +178,9 @@ export class GameplayService {
         let gameEvents = new GameEventManager()
 
         let networkTickerSetting = new TickerSettings()
-        networkTickerSetting.tickPerSeconds = 5 // assume we will have 1 event per 200ms from server
+        networkTickerSetting.tickPerSeconds = context.settings.networkFps 
         networkTickerSetting.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
         
-        
-        network.defaultDelta = 1000 / networkTickerSetting.tickPerSeconds
         // network tick driver
         // отправляем интпут события серверу 
         tickers.push(new Ticker(networkTickerSetting, (delta) => {
@@ -221,7 +219,7 @@ export class GameplayService {
 
         // game state update to consume game events. should update fast as possible
         let fastTickerSettings = new TickerSettings()
-        fastTickerSettings.tickPerSeconds = 60
+        fastTickerSettings.tickPerSeconds = context.settings.uiFps
         fastTickerSettings.tickerTimeLimitSec = context.settings.tickerTimeLimitSec
         tickers.push(new Ticker(fastTickerSettings, (delta) => {
             gameEvents.getEvents(10).map((event) => {
