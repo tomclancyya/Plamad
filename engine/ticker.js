@@ -4,7 +4,7 @@ export class Ticker {
     // setInterval
     // how to clear setInterval
     // how to test setInterval
-    
+    // yo!
     /**
      * 
      * @param {TickerSettings} settings max - 60fps (setInterval cannot call faster than 16ms)
