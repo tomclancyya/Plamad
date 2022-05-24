@@ -1,5 +1,9 @@
 import * as M from './../utils/math';
 export class Ticker {
+
+    // setInterval
+    // how to clear setInterval
+    // how to test setInterval
     
     /**
      * 
