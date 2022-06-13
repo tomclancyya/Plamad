@@ -29,9 +29,11 @@ export class GameplayService {
         const StatesEnum = {
             GameState: "GameState",
             MenuState: "MenuState"
-        }
+        }   
 
-        let currentState = StatesEnum.GameState        
+        let myPlanetName = "player_" + Math.floor(Math.random() * 100)
+        let currentState = StatesEnum.GameState    
+        let botsOnly = false     
         
         this.context = context;
         /** 
@@ -59,10 +61,20 @@ export class GameplayService {
             }
         }
 
-        let scene = new Scene(context.settings.mapSize);
+        let scene = new Scene(context.settings.mapSize);    
+        
+        function createPlanet(botName) {
+            let position = context.random.getVectorSquare(50, scene.mapSize - 50)
+            let planetView = new PlanetView(0, 0, 100, botName, '0x6699ff', gameplay);
+            let planet = new Planet(planetView, scene, null, botName);
+            planet.moveToPosition(position)
+           
+        }
 
-        let planetView = new PlanetView(0, 0, 100, 'player1', '0x110033', gameplay);
-        let planet = new Planet(planetView, scene, context.settings.engineFps, 'player1');
+        function createBot(botName) {
+            let bot = new Bot(context, scene, null, botName)
+            bots.push(bot)
+        }
 
         /**
          * @type {Bot[]}  
@@ -70,12 +82,8 @@ export class GameplayService {
         let bots = []
         for (let i = 0; i < context.settings.botsAmount; i++){
             let botName = 'bot' + i
-            let position = context.random.getVectorSquare(50, scene.mapSize - 50)
-            let planetView = new PlanetView(0, 0, 100, botName, '0x6699ff', gameplay);
-            let planet = new Planet(planetView, scene, null, botName);
-            planet.moveToPosition(position)
-            let bot = new Bot(context, scene, planet, botName)
-            bots.push(bot)
+            createPlanet(botName)
+            createBot(botName)
         }
 
         let collision = new CollisionEngine(scene, context.settings.engineFps)
@@ -92,10 +100,12 @@ export class GameplayService {
         let tickers = []
 
         let scoreView = new TextView(250, 50, "123567", ui)
-        let button = new Button(450, 50, 100, 100, "☰", "white", ui, () => {
+        new Button(450, 50, 100, 100, "☰", "white", ui, () => {
             infoView.addMessage("open menu")
             let viewSettings = new ResultViewSettings()
-            viewSettings.playerScore = planet.score
+            scene.getPlanetsByName(myPlanetName).map(
+                planet => { viewSettings.playerScore = planet.score }
+            )
             viewSettings.resultViewType = ResultViewType.LevelMenu
 
             new ResultView(ui, viewSettings, () => {
@@ -114,20 +124,24 @@ export class GameplayService {
 
         // UI tick
         tickers.push(new Ticker(engineTickerSetting, (delta) => {
-            let pos = planet.transform.position;    
+            scene.getPlanetsByName(myPlanetName).map(
+                (planet) => { 
+                    let pos = planet.transform.position;    
         
-            //move camera
-            if (context.settings.dynamicSettings.cameraMode == CameraModeEnum.showPlayer) {
-                let zoom = planet.getLevelStat().zoom
-                gameplay.pivot.set(pos.x, pos.y);
-                gameplay.scale.set(zoom) 
-                //ui.scale.set(zoom,zoom) 
-            }
+                    //move camera
+                    if (context.settings.dynamicSettings.cameraMode == CameraModeEnum.showPlayer) {
+                        let zoom = planet.getLevelStat().zoom
+                        gameplay.pivot.set(pos.x, pos.y);
+                        gameplay.scale.set(zoom) 
+                    }
+
+                    scoreView.setText(planet.level + "")
+                }
+            )           
 
             if (context.settings.dynamicSettings.cameraMode == CameraModeEnum.showMap)
                 gameplay.pivot.set(context.settings.mapSize / 2,context.settings.mapSize / 2);
-
-            scoreView.setText(planet.level + "")
+            
 
             scene.getObjects().map(t => t.tick(delta))
 
@@ -152,7 +166,9 @@ export class GameplayService {
                 }, allPlanets[0])
 
                 let viewSettings = new ResultViewSettings()
-                viewSettings.playerScore = planet.score
+                scene.getPlanetsByName(myPlanetName).map((planet) => {
+                    viewSettings.playerScore = planet.score
+                })
                 viewSettings.resultViewType = ResultViewType.ResultMenu
                 viewSettings.bestPlayerName = bestPlanet.name
                 viewSettings.bestPlayerScore = bestPlanet.score
@@ -173,7 +189,50 @@ export class GameplayService {
             infoView
         )
 
-        network.connect()
+        new Button(50, 250, 100, 100, "<", "white", ui, () => {
+            context.keyboardInput.arrowLeft = false
+        }, () => {
+            context.keyboardInput.arrowLeft = true
+        })
+
+        new Button(450, 250, 100, 100, ">", "white", ui, () => {
+            context.keyboardInput.arrowRight = false
+        }, () => {
+            context.keyboardInput.arrowRight = true
+        })
+
+        new Button(250, 50, 100, 100, "^", "white", ui, () => {
+            context.keyboardInput.arrowUp = false
+        }, () => {
+            context.keyboardInput.arrowUp = true
+        })
+
+        new Button(250, 450, 100, 100, "v", "white", ui, () => {
+            context.keyboardInput.arrowDown = false
+        }, () => {
+            context.keyboardInput.arrowDown = true
+        })
+
+
+
+        let startAsPLayer = new Button(100, 450, 200, 100, "Start as player", "white", ui, (container) => {
+            inputManager.playerId = myPlanetName
+            network.startGame(myPlanetName)
+            hideStartButtons()
+        }).container
+
+        let startAsBot = new Button(250 + 150, 450, 200, 100, "Start as bot", "white", ui, (container) => {
+            let botName = "bot_" + Math.floor(Math.random() * 100)
+            createBot(botName)
+            myPlanetName = botName
+            network.startGame(botName)
+            hideStartButtons()
+        }).container
+
+        function hideStartButtons() {
+            ui.removeChild(startAsPLayer)
+            ui.removeChild(startAsBot)
+        }
 
         let gameEvents = new GameEventManager()
 
@@ -200,7 +259,6 @@ export class GameplayService {
         // причем консьюмеро будет сдвигать офсет
         // а гейм консьюмер будет хранить всю игру в виде событий 
         network.onReceiveNetworkTick = (delta) => {
-            //infoView.addMessage("got network tick")
             let event = new GameEvent()
             event.delta = network.defaultDelta
             event.eventType = GameEventEnum.Tick
@@ -209,10 +267,26 @@ export class GameplayService {
         }
 
         network.onReceivedInputMessage = (message) => {
-            //infoView.addMessage("got network message from " + message.inputId)
             let event = new GameEvent()
             event.delta = network.defaultDelta
             event.eventType = GameEventEnum.PlayerMove
+            event.inputEvent = message
+            gameEvents.addEvent(event)
+        }
+
+        network.onReceivedCreatePlanet = (message) => {
+            let event = new GameEvent()
+            event.delta = network.defaultDelta
+            event.eventType = GameEventEnum.CreatePlanet
+            event.inputEvent = message
+            gameEvents.addEvent(event)
+        }
+
+
+        network.onReceiveStartGame = (message) => {
+            let event = new GameEvent()
+            event.delta = network.defaultDelta
+            event.eventType = GameEventEnum.GameStart
             event.inputEvent = message
             gameEvents.addEvent(event)
         }
@@ -225,8 +299,19 @@ export class GameplayService {
             gameEvents.getEvents(10).map((event) => {
                 if (event) {
                     switch (event.eventType) {
+                        case GameEventEnum.CreatePlanet:
+                            let name = event.inputEvent
+                            createPlanet(name)
+                            
+                            break;
+    
                         case GameEventEnum.PlayerMove:
                             inputDriver.setPlanetInput(event.inputEvent, event.delta)
+                            break;
+
+
+                        case GameEventEnum.GameStart:                            
+                            network.createPlanet(myPlanetName)
                             break;
     
                         case GameEventEnum.Tick:
@@ -243,5 +328,6 @@ export class GameplayService {
                 } 
             })
         }))
+        network.connect()
     }
 }

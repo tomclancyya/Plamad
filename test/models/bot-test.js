@@ -24,8 +24,9 @@ export class BotTest {
                     let stateManager = new StateManager()
                     let planet = new Planet(new TestView(), scene, 40, "bot1")
                     planet.transform.position = new Vector2(100, 100)
+                    scene.addPlanet(planet)
                     let timer = new BaseTimer(999999)
-                    let state = new SearchAndAttackState(planet, scene, null, timer)
+                    let state = new SearchAndAttackState("bot1", scene, null, timer)
                     let meteor1 = new Meteor(new TestView(), scene, new Vector2(110, 100))
                     let meteor2 = new Meteor(new TestView(), scene, new Vector2(100, 105))
                     scene.meteors = [
@@ -51,13 +52,14 @@ export class BotTest {
                     let scene = new Scene(1000)
                     let stateManager = new StateManager()
                     let planet = new Planet(new TestView(), scene, 40, "bot1")
+                    scene.addPlanet(planet)
                     planet.transform.position = new Vector2(100, 100)
                     let timer = new BaseTimer(999999)
                     let random = new Random(null)
                     random.getVector = function () {
                         return new Vector2(0.5, 0.5)
                     }
-                    let state = new MovingState(planet, scene, random, timer)
+                    let state = new MovingState("bot1", scene, random, timer)
                     isBooleanEqual(planet.transform.position.x, 100)
                     isBooleanEqual(planet.transform.position.y, 100)
                     isBooleanEqual(state.currentDirection, null)
@@ -88,6 +90,7 @@ export class BotTest {
                 "planet is not going outside of border": () => {
                     let scene = new Scene(1000)
                     let planet = new Planet(new TestView(), scene, 40, "bot1")
+                    scene.addPlanet(planet)
                     planet.transform.position = new Vector2(0, 0)
                     planet.transform.move(new Vector2(0, 0))
                     isBooleanEqual(planet.transform.isCollideBorder(), true)

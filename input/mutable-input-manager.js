@@ -16,6 +16,8 @@ export class MutableInputManager {
      */
     inputs = []
 
+    playerId = "nonameplayer"
+
     /** 
      * @type {InputKeyboard}
      * @private
@@ -36,10 +38,9 @@ export class MutableInputManager {
     }
 
     addInputPlayer(inputKeyboard) {
-        let player1Id = "player1"
 
         let input = new InputInternal(
-            player1Id, 
+            this.playerId, 
             inputKeyboard.arrowLeft,
             inputKeyboard.arrowRight,
             inputKeyboard.arrowUp,

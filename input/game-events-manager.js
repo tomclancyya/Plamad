@@ -75,5 +75,6 @@ export const GameEventEnum = {
     None: "None",
     Tick: "Tick",
     PlayerMove: "PlayerMove",
-    GameStart: "GameStart"
+    GameStart: "GameStart",
+    CreatePlanet: "CreatePlanet",
 }

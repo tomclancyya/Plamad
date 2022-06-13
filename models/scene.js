@@ -39,6 +39,10 @@ export class Scene {
         return this.planets;
     }
 
+    getPlanetsByName(planetName){
+        return this.planets.filter(p => p.name == planetName)
+    }
+
     getMeteors() {
         return this.meteors;
     }

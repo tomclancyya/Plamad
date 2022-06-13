@@ -24,6 +24,8 @@ export class GameContext {
     * @type {MutableInputManager}   
     */
     input
+
+    keyboardInput
    
     /** 
     * @type {Scene}

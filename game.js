@@ -37,6 +37,7 @@ module.exports = function (input) {
     })
 
     let gameContext = new GameContext(app, inputManager, random);
+    gameContext.keyboardInput = input
     gameContext.loadMenu();
 
     console.log(gameContext)

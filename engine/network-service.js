@@ -8,7 +8,9 @@ export class NetworkService {
 
     isLocalMode = false;
 
-    defaultDelta = 33
+    defaultDelta = 33;
+
+    currentState = NetworkStatesEnum.NotConnected
 
     /** 
      * @type {InputInternal[]}
@@ -47,6 +49,7 @@ export class NetworkService {
 
     connect() {
         if (this.isLocalMode) {
+            this.currentState = NetworkStatesEnum.WaitingPlayers
             this.infoView.addMessage('connected locally')
         } else {
             this.infoView.addMessage('trying to connect to server')
@@ -54,15 +57,18 @@ export class NetworkService {
         }
     }
 
+    /**
+     * @private
+     */
     connectToServer(){
         
         let webSocketClient = new WebSocket(this.settings.networkAddress)
         webSocketClient.onopen = (event) => {
-            console.log('connected to server')
+            this.infoView.addMessage('connected to server')
+            this.currentState = NetworkStatesEnum.WaitingPlayers
             this.infoView.addMessage(event.data) 
         }
         webSocketClient.onmessage = (event) => {
-            console.log(event)
 
 
             try {
@@ -71,11 +77,22 @@ export class NetworkService {
                  */
                 let message = JSON.parse(event.data)
                 if (message.type == MessageTypeEnum.Tick) {
-                    this.onReceiveNetworkTick(message.delta)
+                        this.onReceiveNetworkTick(message.delta)
                 }   
 
                 if (message.type == MessageTypeEnum.PlayerMove) {
                     this.onReceivedInputMessage(message.message)
+                }   
+
+                if (message.type == MessageTypeEnum.GameStart) {
+                    this.currentState = NetworkStatesEnum.Playing
+                    this.infoView.addMessage('got event: game started') 
+                    this.onReceiveStartGame()
+                }   
+
+                if (message.type == MessageTypeEnum.CreatePlanet) {
+                    this.onReceivedCreatePlanet(message.senderId)
+                    this.infoView.addMessage('planet added: ' + message.senderId) 
                 }  
                 
                 
@@ -89,6 +106,49 @@ export class NetworkService {
         this.webSocketClient = webSocketClient
     }
 
+    createPlanet(planetName){
+        if (this.currentState != NetworkStatesEnum.Playing)
+            return
+
+        if (this.isLocalMode)
+            this.onReceivedCreatePlanet(planetName)
+        else {
+            if (this.webSocketClient == null) {
+                console.log('not connected to server!')
+                return;
+            }
+
+            let networkMessage = new Message()
+            networkMessage.senderId = planetName
+            networkMessage.type = MessageTypeEnum.CreatePlanet
+            networkMessage.delta = this.defaultDelta
+            networkMessage.message = null
+            this.webSocketClient.send(JSON.stringify(networkMessage))
+        }    
+    }
+
+    startGame(playerName){
+        if (this.currentState != NetworkStatesEnum.WaitingPlayers)
+            return
+
+        if (this.isLocalMode) {
+            this.currentState = NetworkStatesEnum.Playing
+            this.onReceiveStartGame()
+        } else {
+            if (this.webSocketClient == null) {
+                console.log('not connected to server!')
+                return;
+            }
+
+            let networkMessage = new Message()
+            networkMessage.senderId = playerName
+            networkMessage.type = MessageTypeEnum.GameStart
+            networkMessage.delta = this.defaultDelta
+            networkMessage.message = null
+            this.webSocketClient.send(JSON.stringify(networkMessage))
+        }
+    }
+
     
 
     /**
@@ -96,6 +156,9 @@ export class NetworkService {
      * @param {InputInternal} message 
      */
     sendInputMessage(message){
+        if (this.currentState != NetworkStatesEnum.Playing)
+            return
+
         if (this.isLocalMode)
             this.onReceivedInputMessage(message)
         else {
@@ -115,12 +178,21 @@ export class NetworkService {
     }
 
     onReceiveNetworkTick(delta) {
-        throw Error("was not assigned!")
+        throw Error("onReceiveNetworkTick was not assigned!")
     }
 
     onReceivedInputMessage(message) {
-        throw Error("was not assigned!")
+        throw Error("onReceivedInputMessage was not assigned!")
     }
+
+    onReceivedCreatePlanet() {
+        throw Error("callback onReceivedCreatePlanet was not assigned!")
+    }
+
+    onReceiveStartGame() {
+        throw Error("onReceiveStartGame was not assigned!")
+    }
+    
 
     disconnect(){
 
@@ -165,5 +237,13 @@ export const MessageTypeEnum = {
     None: "None",
     Tick: "Tick",
     PlayerMove: "PlayerMove",
-    GameStart: "GameStart"
+    GameStart: "GameStart",
+    CreatePlanet: "CreatePlanet",
+    Message: "Message"
+}
+
+export const NetworkStatesEnum = {
+    NotConnected: "NotConnected",
+    WaitingPlayers: "WaitingPlayers",
+    Playing: "Playing"
 }

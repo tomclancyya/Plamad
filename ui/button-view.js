@@ -22,7 +22,7 @@
      */
     container = null;
      
-    constructor (x, y, width, height, text, buttonColor = '0x2c3e50', parent, callback) {
+    constructor (x, y, width, height, text, buttonColor = '0x2c3e50', parent, callback, callback2) {
     let PIXI = require('pixi.js');
     let button = new PIXI.Graphics();
     let container = new PIXI.Container();
@@ -38,7 +38,11 @@
     button.interactive = true;
     button.buttonMode = true;
 
-    button.on('pointerup', callback)
+    if (callback)
+        button.on('pointerup', () => { callback(container) })
+
+    if (callback2)
+        button.on('pointerdown', () => { callback2(container) })
 
 
     let textObject = new PIXI.Text(text, textStyle);

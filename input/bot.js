@@ -31,8 +31,8 @@ export class Bot {
         let moveTimer = new Timer(2000)
         let states =  
         [
-            new MovingState(planet, scene, random, moveTimer),
-            new SearchAndAttackState(planet, scene, random, searchTimer)
+            new MovingState(name, scene, random, moveTimer),
+            new SearchAndAttackState(name, scene, random, searchTimer)
         ]
 
         this.stateManager.setStates(states)
@@ -73,26 +73,29 @@ export class MovingState {
 
     /**
      * 
-     * @param {Planet} planet 
-     * @param {*} scene 
+     * @param {string} planetName 
+     * @param {Scene} scene 
      * @param {*} random 
      */
-    constructor(planet, scene, random, timer) {
-        this.planet = planet
+    constructor(planetName, scene, random, timer) {
+        this.planetName = planetName
         this.scene = scene
         this.random = random
         this.timer = timer
     }
 
     update(delta) {
-        if (this.planet.transform.isCollideBorder()) {
-            this.currentDirection = this.random.getVector()
-        }
-        this.timer.update(delta)
+        this.scene.getPlanetsByName(this.planetName).map(planet => { 
+            if (planet.transform.isCollideBorder()) {
+                this.currentDirection = this.random.getVector()
+            }
 
-        if (this.timer.isFinished()) {
-            this.nextState = StatesEnum.SearchAndAttackState
-        }
+            this.timer.update(delta)
+
+            if (this.timer.isFinished()) {
+                this.nextState = StatesEnum.SearchAndAttackState
+            }            
+        })
     }
 
     start(){
@@ -117,39 +120,33 @@ export class SearchAndAttackState {
      */
     scene = null
     /**
-     * @type {Planet}
+     * @type {string}
      */
-    planet = null
+     planetName = null
 
-    constructor(planet, scene, random, timer) {
+    constructor(planetName, scene, random, timer) {
         this.timer = timer
-        this.planet = planet
+        this.planetName = planetName
         this.scene = scene
         this.random = random
     }
 
     update(delta) {
 
-        //if (this.currentDirection) {
-        //    this.timer.update(delta)
-        //    console.log('[SearchAndAttackState] has current direction: ' + JSON.stringify(this.currentDirection))
-        //} else {
-            let planetPosition = this.planet.transform.position
-            let closestMeteor = this.scene.getClosestMeteor(planetPosition, 40000)
-            if (closestMeteor) {
-                let meteorPosition = closestMeteor.transform.position
-                this.currentDirection = meteorPosition.substract(planetPosition).getNormalized()
-            } else {
-                this.nextState = StatesEnum.MovingState
-            }
-        //}
-        
+        this.scene.getPlanetsByName(this.planetName).map(planet => {
+                let planetPosition = planet.transform.position
+                let closestMeteor = this.scene.getClosestMeteor(planetPosition, 40000)
+                if (closestMeteor) {
+                    let meteorPosition = closestMeteor.transform.position
+                    this.currentDirection = meteorPosition.substract(planetPosition).getNormalized()
+                } else {
+                    this.nextState = StatesEnum.MovingState
+                }           
 
-        if (this.timer.isFinished()) {
+                if (this.timer.isFinished()) {
 
-            //console.log('[SearchAndAttackState] time is finished, changing state to MovingState')
-            //this.stateManager.nextState(StatesEnum.MovingState)
-        }
+                }
+            })
     }
 
     start() {
