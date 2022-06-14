@@ -2,9 +2,11 @@
 
 # install project
 npm install
+npm install -g browserify 
 
 #compile project
-~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
+linux:     ~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
+windows: ~/AppData/Roaming/npm/browserify app.js -o mini.js -t babelify  
 
 #install web server
 vs code plugin -> install live server

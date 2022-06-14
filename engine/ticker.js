@@ -1,10 +1,14 @@
 import * as M from './../utils/math';
 export class Ticker {
+
+    // setInterval
+    // how to clear setInterval
+    // how to test setInterval
     
     /**
      * 
      * @param {TickerSettings} settings max - 60fps (setInterval cannot call faster than 16ms)
-     * @param {*} callback 
+     * @param {function(number)} callback 
      */
     constructor(settings, callback){
         let tickPerSeconds = settings.tickPerSeconds
