@@ -8,7 +8,7 @@ export class Ticker {
     /**
      * 
      * @param {TickerSettings} settings max - 60fps (setInterval cannot call faster than 16ms)
-     * @param {*} callback 
+     * @param {function(number)} callback 
      */
     constructor(settings, callback){
         let tickPerSeconds = settings.tickPerSeconds
