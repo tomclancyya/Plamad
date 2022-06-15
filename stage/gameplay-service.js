@@ -1,4 +1,5 @@
-import { Application, ObservablePoint } from 'pixi.js';
+/*[test]*///import pixi from "pixi-shim"; const { Application, ObservablePoint } = pixi;
+/*[production]*/import { Application, ObservablePoint } from "pixi.js";
 import { Button } from '../ui/button-view';
 import { GameContext } from '../models/game-context';
 import { Planet } from '../models/planet';
