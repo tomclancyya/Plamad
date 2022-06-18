@@ -35,9 +35,6 @@ export class TickerTest {
                 isNumberEqual(ticker.ticks, 2)
                 isBooleanEqual(stop, false)
                 tick()
-                isNumberEqual(ticker.ticks, 3)
-                isBooleanEqual(stop, false)
-                tick()
                 isNumberEqual(ticker.ticks, 0)
                 isBooleanEqual(stop, true)
                 return done();

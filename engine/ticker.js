@@ -1,9 +1,5 @@
 import * as M from './../utils/math';
 export class Ticker {
-
-    // setInterval
-    // how to clear setInterval
-    // how to test setInterval
     
     /**
      * 
@@ -19,7 +15,7 @@ export class Ticker {
         
         this.interval = this.setInterval(() => {
             this.ticks++;
-            if (limit != 0 && this.ticks > tickPerSeconds * limit) {
+            if (limit != 0 && this.ticks >= tickPerSeconds * limit) {
                 this.ticks = 0;
                 this.stop()
             }

@@ -7,6 +7,7 @@ import { BotTest } from "./models/bot-test.js";
 import { MathTest } from "./utils/math-test.js";
 import { TimerTest } from "./utils/timer-test.js";
 import { RandomTest } from "./utils/random-test.js";
+import { TickerTest } from "./test-engine/ticker-test.js";
 
 console.log('')
 console.log('\x1b[36m%s\x1b[0m', 'Running test');  //cyan
@@ -20,3 +21,4 @@ testEngine.runTest(new InputTest())
 testEngine.runTest(new EventManagerTest())
 testEngine.runTest(new RandomTest())
 testEngine.runTest(new TimerTest())
+testEngine.runTest(new TickerTest())
