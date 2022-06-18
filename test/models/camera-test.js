@@ -1,7 +1,6 @@
 import { Camera } from "../../models/camera"
 import { done, isNumberEqual } from "../test-engine/test-assertion";
-/*[test]*///import pixi from "pixi-shim"; const { Application, Container } = pixi;
-/*[production]*/import { Application, Container } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { CameraModeEnum, DynamicSettings, Settings } from "../../models/settings";
 
 export class CameraTest {
