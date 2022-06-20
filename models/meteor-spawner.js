@@ -1,5 +1,4 @@
-/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
-/*[production]*/import { Container } from "pixi.js";
+import { Container } from "pixi.js";
 import { Random } from "../engine/random";
 import { Ticker } from "../engine/ticker";
 import { MeteorView } from "../ui/meteor-view";

@@ -1,7 +1,5 @@
-/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
-/*[production]*/import { Container } from "pixi.js";
-/*[test]*///const { Text } = pixi;
-/*[production]*/import { Text } from "pixi.js";
+import { Container } from "pixi.js";
+import { Text } from "pixi.js";
 
 
 // maybe will help with blurry text

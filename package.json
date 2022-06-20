@@ -17,6 +17,7 @@
     "decimal.js-light": "^2.5.1",
     "escape-string-regexp": "^5.0.0",
     "mocha": "^9.1.0",
+    "pixi-mock.js": "file:test/pixi-mock",
     "pixi-shim": "^2.3.7",
     "pixi.js": "^6.1.2",
     "prando": "^6.0.1",

@@ -1,5 +1,4 @@
-/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
-/*[production]*/import { Container, FilterState } from "pixi.js";
+import { Container, FilterState } from "pixi.js";
 import { Timer } from "../utils/timer";
 import { BackgroundView } from "./background-view";
 import { TextView } from "./text-view";
