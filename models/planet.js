@@ -1,6 +1,4 @@
-
-/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
-/*[production]*/import { Container } from "pixi.js";
+import { Container } from "pixi.js";
 import { Transform } from './transform'
 import { Scene } from './scene';
 import { levels } from './planet-level';

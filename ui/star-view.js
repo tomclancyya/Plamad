@@ -1,5 +1,4 @@
-/*[test]*///import pixi from "pixi-shim"; const { Container, Graphics } = pixi;
-/*[production]*/import { Container, Graphics } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 
 export class StarView {
 

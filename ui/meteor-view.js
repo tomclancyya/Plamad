@@ -1,5 +1,4 @@
-/*[test]*///import pixi from "pixi-shim"; const { Container } = pixi;
-/*[production]*/import { Container } from "pixi.js";
+import { Container } from "pixi.js";
 
 import { Vector2 } from '../utils/vector2';
 import { CommonView } from './common/common-view';

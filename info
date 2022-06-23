@@ -3,27 +3,23 @@
 # install project
 npm install
 npm install -g browserify 
+npm install --save ./test/pixi-mock/
 
 #compile project
-linux:     ~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
+linux:   ~/.npm-global/bin/browserify ./app.js > ./mini.js -t babelify
 windows: ~/AppData/Roaming/npm/browserify app.js -o mini.js -t babelify  
 
 #install web server
 vs code plugin -> install live server
 
-
 #run project
 run index.html via Live Server
 
 #run tests:
-node --experimental-specifier-resolution=node ./test/app-test.js
-
-#change environment:
-node --experimental-specifier-resolution=node ./test/test-engine/imports-manager.js test
-node --experimental-specifier-resolution=node ./test/test-engine/imports-manager.js production
+node --experimental-specifier-resolution=node --experimental-loader ./test/loader.js ./test/app-test.js
 
 #run test coverage:
-./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "node_modules/*" -x "test/*" -r=html node --experimental-specifier-resolution=node ./test/app-test.js 
+./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "node_modules/*" -x "test/*" -r=html node --experimental-specifier-resolution=node --experimental-loader ./test/loader.js ./test/app-test.js 
 
 
 #need to integrate
@@ -57,7 +53,7 @@ https://github.com/pixijs/pixijs/issues/4769
 можно использовать специальный проект, который может пикси запустить на 
 https://github.com/Prozi/pixi-shim
 
-#почему используешь костыль с импортами pixijs и комментами аля /*[production]*/
+#почему используешь костыль с loader и pixi-mock
 не хочу собирать проект через babel для тестирования
 изза того что требует доп шагов для настройки
 а также бабел собирает все в один файл (а при запуске тестов удобно знать в каком файле обвалилось)
