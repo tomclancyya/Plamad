@@ -1,38 +1,196 @@
+
 export class TestEngine {
 
-    executedLastTest = false
     constructor() {
     }
 
+     /**
+     *  @type {TestDescription[]}
+     */
+    testDescriptions = []
+    testsTotal = 0
+    testsError = 0
+    testsSuccess = 0
+    testsSkip = 0
 
-    runTest(tests, lastTest = false) {
-        if (this.executedLastTest) {
-            return;
-        }
+    runTest(tests) {
 
         let testCases = tests.getTests();
+
         Object.entries(testCases).map((subject) => {
-            console.log('  ' + subject[0]);
-            Object.entries((subject[1])).map((testCase) => {
-                process.stdout.write('        ' + testCase[0] + '\r');
-                try {
-                    let testResult = testCase[1]()
-                    console.log(testResult.color, '    ' + testResult.result, '\x1b[0m');
-                } catch (testFailResult) {
-                    if (testFailResult.result) {
-                        console.log(testFailResult.color, '    ' + testFailResult.result, '\x1b[0m');
-                        console.log(testFailResult.color, '    ' + testFailResult.message, '\x1b[0m');
-                    } else {
-                        console.log(testFailResult, '\x1b[0m');
-                    }
-                }
+            let testDescription = new TestDescription()
+            let isSkipDescription = subject[0].includes('.skip')
+            let isOnlyDescription = subject[0].includes('.only')
+            testDescription.testDescription = subject[0]
+            testDescription.isSkip = isSkipDescription
+            testDescription.isOnly = isOnlyDescription
+
+                Object.entries((subject[1])).map((testCase) => {   
+                    let isSkip = testCase[0].includes('.skip')
+                    let isOnly = testCase[0].includes('.only')
+                    
+                    let testCaseFunc = testCase[1]
+                    let f = new FuncInfo()
+                    f.func = testCaseFunc
+                    f.testDescription = subject[0]
+                    f.testCase = testCase[0]
+                    f.isSkip = isSkip
+                    f.isOnly = isOnly
+                    testDescription.testCases.push(f)
+                })
+
+            this.testDescriptions.push(testDescription)                
+        })
+    }
+
+    updateTestsIsSkipStatesAccordingToDescriptions() {
+        let onlyDescriptions = this.testDescriptions.filter(t => t.isOnly)
+        if (onlyDescriptions.length > 0) {
+            let descriptionsToSkip = this.testDescriptions.filter(t => !t.isOnly)
+            descriptionsToSkip.map(d => d.isSkip = true)
+        }
+
+        //set tests as skip is desc is skip
+        this.testDescriptions.map(d => {
+            if (d.isSkip) {
+                d.testCases.map(t => {
+                    t.isSkip = true
+                })
+            }
+        })
+    }
+
+    checkForDuplicates() {
+        let descriptionNames = {}
+        let testNames = {}
+        this.testDescriptions.map(d => {
+            if (!descriptionNames[d.testDescription])  { descriptionNames[d.testDescription] = 1 } else { descriptionNames[d.testDescription]++ }
+            d.testCases.map(t => {
+                if (!testNames[t.testCase])  { testNames[t.testCase] = 1 } else { testNames[t.testCase]++ }
             })
         })
 
-        if (lastTest) {
-            this.executedLastTest = true;
-            console.log('  ' + 'latest test was executed');
+        for (var key of Object.keys(descriptionNames)) {
+            if (descriptionNames[key] > 1) {
+                return "found duplicate of test case, check the name:\n\n" + key
+            }
         }
 
+        for (var key of Object.keys(testNames)) {
+            if (testNames[key] > 1) {
+                return "found duplicate of test description, check the name:\n\n" + key
+            }
+        }
     }
+
+    updateTestsIsSkipStateAccordingToTestCases() {
+        this.testDescriptions.map(d => { 
+            let testsOnly = d.testCases.filter(t => t.isOnly)
+            if (testsOnly.length > 0) {
+                let testsToSkip = d.testCases.filter(t => !t.isOnly)
+                testsToSkip.map(d => d.isSkip = true)
+            }
+        })
+    }
+
+    getTestsTotal() {
+        let tests = 0
+        this.testDescriptions.map(d => d.testCases.map(t => { 
+            tests++ 
+        }))
+        return tests
+    }
+
+    getTestsSkip() {
+        let tests = 0
+        this.testDescriptions.map(d => d.testCases.map(t => { 
+            if (t.isSkip)
+                tests++ 
+        }))
+
+        return tests
+    }
+
+    runAll() {
+        if (this.checkForDuplicates()) {
+            console.log("\x1b[31m", `Cannot run tests`)
+            console.log(this.checkForDuplicates())
+            console.log('')
+            return;
+        }
+
+        this.updateTestsIsSkipStatesAccordingToDescriptions()
+        this.updateTestsIsSkipStateAccordingToTestCases()
+        this.testsTotal = this.getTestsTotal()
+        this.testsSkip = this.getTestsSkip()
+        this.runEachTests().then((result) => {
+            console.log('\nTest results')
+                          console.log(` Total tests  : ${this.getTestsTotal()}`)
+
+            if (this.testsSuccess > 0)
+                console.log("\x1b[32m", `Success tests: ${this.testsSuccess} `)
+            if (this.testsError > 0)
+                console.log("\x1b[31m", `Failed tests : ${this.testsError}`)
+                if (this.testsSkip > 0)                
+                console.log("\x1b[33m", `Skipped tests: ${this.testsSkip}`)
+            //console.log(result)
+        });
+    }
+
+    async runEachTests() {
+        for (const desc of this.testDescriptions) {            
+            if (desc.isSkip) {
+                //console.log('\x1b[33m', '' + 'SKIP', '\x1b[0m');
+            } else {
+
+                process.stdout.write('\n      ' + desc.testDescription + '\r');
+                console.log('')
+                for (const test of desc.testCases) {
+                    process.stdout.write('        ' + test.testCase + '\r');
+
+                    if (test.isSkip){
+                        console.log('\x1b[33m', '  ' + 'SKIP', '\x1b[0m');
+                    } else {
+                        try {
+                            let testResult = await test.func();
+                            console.log(testResult.color, '    ' + testResult.result, '\x1b[0m');
+                            this.testsSuccess++;
+                        } catch (testFailResult) {
+                            this.testsError++;
+                            //console.log('')
+                            if (testFailResult.result) {
+                                console.log(testFailResult.color, '  ' + 'FAIL', '\x1b[0m');
+                                console.log('')
+                                console.log(testFailResult.color, '    ' + testFailResult.message, '\x1b[0m');
+                            } else {
+                                console.log(testFailResult, '\x1b[0m');
+                            }
+                            console.log('')
+                        }
+                    }
+                }
+            }
+
+           
+        }
+    }
+}
+
+class TestDescription {
+    testDescription = "no description"
+    isOnly = false
+    isSkip = false
+    /**
+     *  @type {FuncInfo[]}
+     */
+    testCases = []
+}
+
+class FuncInfo {
+    constructor() {}
+    func = null
+    testDescription = "no description"
+    testCase = "no case name"
+    isSkip = false
+    isOnly = false
 }
