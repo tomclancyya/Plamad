@@ -18,9 +18,18 @@ run index.html via Live Server
 #run tests:
 node --experimental-specifier-resolution=node --experimental-loader ./test/loader.js ./test/app-test.js
 
+#testings hints
+to skip test description or test case use postfix:
+.skip
+.only
+for exanple: "async test should.only" will run only test description "async test should" and will skip another test
+
 #run test coverage:
 ./node_modules/.bin/c8 --all -x "node_modules.nosync/*" -x "node_modules/*" -x "test/*" -r=html node --experimental-specifier-resolution=node --experimental-loader ./test/loader.js ./test/app-test.js 
 
+#run test issue with pixi.js
+if you got SyntaxError: The requested module 'pixi.js' does not provide an export named 'BlaBla'
+try to mock module BlaBla in ./test/pixi-mock/pixi-mock.js
 
 #need to integrate
 jshint
