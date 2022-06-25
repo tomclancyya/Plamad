@@ -13,8 +13,7 @@ export class TestEngine {
     testsSuccess = 0
     testsSkip = 0
 
-    runTest(tests) {
-
+    add(tests) {
         let testCases = tests.getTests();
 
         Object.entries(testCases).map((subject) => {
@@ -43,6 +42,9 @@ export class TestEngine {
         })
     }
 
+    /**
+     * @private
+     */
     updateTestsIsSkipStatesAccordingToDescriptions() {
         let onlyDescriptions = this.testDescriptions.filter(t => t.isOnly)
         if (onlyDescriptions.length > 0) {
@@ -59,7 +61,10 @@ export class TestEngine {
             }
         })
     }
-
+    /**
+     * 
+     * @returns @private
+     */
     checkForDuplicates() {
         let descriptionNames = {}
         let testNames = {}
@@ -82,7 +87,9 @@ export class TestEngine {
             }
         }
     }
-
+    /**
+     * @private
+     */
     updateTestsIsSkipStateAccordingToTestCases() {
         this.testDescriptions.map(d => { 
             let testsOnly = d.testCases.filter(t => t.isOnly)
@@ -92,7 +99,9 @@ export class TestEngine {
             }
         })
     }
-
+    /**
+     * @private
+     */
     getTestsTotal() {
         let tests = 0
         this.testDescriptions.map(d => d.testCases.map(t => { 
@@ -100,7 +109,9 @@ export class TestEngine {
         }))
         return tests
     }
-
+    /**
+     * @private
+     */
     getTestsSkip() {
         let tests = 0
         this.testDescriptions.map(d => d.testCases.map(t => { 
@@ -137,6 +148,9 @@ export class TestEngine {
         });
     }
 
+    /**
+     * @private
+     */
     async runEachTests() {
         for (const desc of this.testDescriptions) {            
             if (desc.isSkip) {
