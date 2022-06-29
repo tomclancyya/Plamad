@@ -1,5 +1,5 @@
 import { EventManager } from "../../utils/event-manager";
-import { done, isEqual, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
+import { done, isNumberEqual, isVector2Equal } from "../test-engine/test-assertion";
 
 export class EmptyTest {
     constructor(){}

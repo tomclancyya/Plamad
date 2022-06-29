@@ -13,18 +13,70 @@ export class TestEngine {
     testsSuccess = 0
     testsSkip = 0
 
-    add(tests) {
+    convertToArrayAsArray(tests) {
+        let testDescription = tests;
+
+        let convertedTesAsArrayOfArrays = []
+        for (let i = 0; i < testDescription.length; i = i+ 2) {
+            let name = testDescription[i]
+            let cases = testDescription[i+1]
+            let testArray = [name, cases]
+            convertedTesAsArrayOfArrays.push(testArray)
+        }
+
+        convertedTesAsArrayOfArrays.map((subject) => {
+                let convertedTestCaseAsArrayOFArrays = []
+                for (let i = 0; i < subject[1].length; i = i+ 2) {
+                    let name = subject[1][i]
+                    let func = subject[1][i+1]
+                    let testCaseArray = [name, func]
+                    convertedTestCaseAsArrayOFArrays.push(testCaseArray)
+                }
+
+                subject[1] = convertedTestCaseAsArrayOFArrays
+            })
+        return convertedTesAsArrayOfArrays    
+    }
+
+    convertToArrayAsObject(tests) {
+
         let testCases = tests.getTests();
 
+        let convertedTesAsArrayOfArrays = []
         Object.entries(testCases).map((subject) => {
+            convertedTesAsArrayOfArrays.push([subject[0], subject[1]])
+        })
+
+        convertedTesAsArrayOfArrays.map((subject) => {
+            let convertedTestCaseAsArrayOFArrays = []
+            
+            Object.entries((subject[1])).map((testCase) => {
+                convertedTestCaseAsArrayOFArrays.push([testCase[0],testCase[1]])
+            })
+
+            subject[1] = convertedTestCaseAsArrayOFArrays
+        })
+
+        return convertedTesAsArrayOfArrays
+    }
+
+    add(tests) {
+        let testCases = null
+        if (Array.isArray(tests)) {
+            testCases = this.convertToArrayAsArray(tests);
+        } else {
+            testCases = this.convertToArrayAsObject(tests);
+        }
+
+        testCases.map((subject) => {
             let testDescription = new TestDescription()
             let isSkipDescription = subject[0].includes('.skip')
             let isOnlyDescription = subject[0].includes('.only')
             testDescription.testDescription = subject[0]
             testDescription.isSkip = isSkipDescription
-            testDescription.isOnly = isOnlyDescription
+            testDescription.isOnly = isOnlyDescription;
 
-                Object.entries((subject[1])).map((testCase) => {   
+                ((subject[1])).map((testCase) => {   
                     let isSkip = testCase[0].includes('.skip')
                     let isOnly = testCase[0].includes('.only')
                     

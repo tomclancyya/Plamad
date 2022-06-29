@@ -1,5 +1,5 @@
 import { Ticker, TickerSettings } from "../../engine/ticker";
-import { done, isBooleanEqual, isNumberEqual } from "./test-assertion";
+import { done, isBooleanEqual, isNumberEqual } from "../test-engine/test-assertion";
 
 
 export class TickerTest {

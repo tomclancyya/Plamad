@@ -9,8 +9,9 @@
             "type": "node",
             "request": "launch",
             "args": [
+             //   "--es-module-specifier-resolution=node",
                 "--experimental-specifier-resolution=node", 
-                "--experimental-loader ${workspaceFolder}/test/loader.js", 
+                "--experimental-loader","./test/loader.js", 
                 "${workspaceFolder}/test/app-test.js"
             ]
         },{
@@ -18,8 +19,9 @@
             "type": "node",
             "request": "launch",
             "args": [
+               // "--es-module-specifier-resolution=node",
                 "--experimental-specifier-resolution=node", 
-                "--experimental-loader ${workspaceFolder}/test/loader.js", 
+                "--experimental-loader","./test/loader.js", 
                 "${workspaceFolder}/test/app-test.js"
             ]
         }
