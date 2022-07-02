@@ -1,4 +1,5 @@
 
+import { GameEvent, GameEventEnum, GameEventManager } from "../input/game-events-manager";
 import { InputInternal } from "../input/input-internal";
 import { NetworkMode, Settings } from "../models/settings";
 import { InfoView } from "../ui/info-view";
@@ -19,14 +20,20 @@ export class NetworkService {
     messagesBuffer = []
 
     /**
+     * @type {GameEventManager}
+     */
+    eventManager = null
+
+    /**
      * 
      * @param {Settings} settings 
      * @param {*} callback 
      * @param {InfoView} infoView
      */
-    constructor(settings, infoView){
+    constructor(settings, infoView, eventManager){
         this.settings = settings
         this.infoView = infoView
+        this.eventManager = eventManager
 
         this.defaultDelta = 1000 / settings.networkFps
 
@@ -85,7 +92,6 @@ export class NetworkService {
                 }   
 
                 if (message.type == MessageTypeEnum.GameStart) {
-                    this.currentState = NetworkStatesEnum.Playing
                     this.infoView.addMessage('got event: game started') 
                     this.onReceiveStartGame()
                 }   
@@ -132,7 +138,6 @@ export class NetworkService {
             return
 
         if (this.isLocalMode) {
-            this.currentState = NetworkStatesEnum.Playing
             this.onReceiveStartGame()
         } else {
             if (this.webSocketClient == null) {
@@ -155,11 +160,11 @@ export class NetworkService {
      * 
      * @param {InputInternal} message 
      */
-    sendInputMessage(message){
+    sendInputMessage(message, sendLocally = false){
         if (this.currentState != NetworkStatesEnum.Playing)
             return
 
-        if (this.isLocalMode)
+        if (this.isLocalMode || sendLocally)
             this.onReceivedInputMessage(message)
         else {
             if (this.webSocketClient == null) {
@@ -177,22 +182,53 @@ export class NetworkService {
 
     }
 
-    onReceiveNetworkTick(delta) {
-        throw Error("onReceiveNetworkTick was not assigned!")
+    // можно добавлять все события из сети добавлƒь в gameEventManager, 
+    // причем консьюмеро будет сдвигать офсет
+    // а гейм консьюмер будет хранить всю игру в виде событий 
+    onReceiveNetworkTick = (delta) => {
+
+        if (this.currentState != NetworkStatesEnum.Playing)
+            return
+
+        let event = new GameEvent()
+        event.delta = this.defaultDelta
+        event.eventType = GameEventEnum.Tick
+        event.inputEvent = null
+        this.eventManager.addEvent(event)            
     }
 
-    onReceivedInputMessage(message) {
-        throw Error("onReceivedInputMessage was not assigned!")
+    onReceivedInputMessage = (message) => {
+        let event = new GameEvent()
+        event.delta = this.defaultDelta
+        event.eventType = GameEventEnum.PlayerMove
+
+        let inputObject = Object.assign(new InputInternal(), message)
+        event.inputEvent = inputObject
+        this.eventManager.addEvent(event)
     }
 
-    onReceivedCreatePlanet() {
-        throw Error("callback onReceivedCreatePlanet was not assigned!")
+    onReceivedCreatePlanet = (message) => {
+        let event = new GameEvent()
+        event.delta = this.defaultDelta
+        event.eventType = GameEventEnum.CreatePlanet
+        event.inputEvent = message
+        this.eventManager.addEvent(event)
     }
 
-    onReceiveStartGame() {
-        throw Error("onReceiveStartGame was not assigned!")
+
+    onReceiveStartGame = (message) => {        
+        this.currentState = NetworkStatesEnum.Playing
+
+        let event = new GameEvent()
+        event.delta = this.defaultDelta
+        event.eventType = GameEventEnum.GameStart
+        event.inputEvent = message
+        this.eventManager.addEvent(event)
     }
-    
+
+    getEvents() {
+        return this.eventManager.getEvents(this.settings.eventsPerTick)
+    }    
 
     disconnect(){
 

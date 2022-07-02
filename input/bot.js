@@ -1,4 +1,6 @@
 
+import Prando from "prando";
+import { Random } from "../engine/random";
 import { GameContext } from "../models/game-context";
 import { Planet } from "../models/planet";
 import { Scene } from "../models/scene";
@@ -21,10 +23,10 @@ export class Bot {
      * @param {Scene} scene 
      * @param {string} name
      */
-    constructor(context, scene, planet, name){
+    constructor(context, scene, planet, name, isDetermenistic = true){
 
         this.name = name
-        let random = context.random
+        let random = isDetermenistic ? context.random : new Random(new Prando (2))
 
         this.stateManager = new StateManager()
         let searchTimer = new Timer(200)
@@ -36,8 +38,10 @@ export class Bot {
         ]
 
         this.stateManager.setStates(states)
-        this.stateManager.nextState(StatesEnum.MovingState)
+    }
 
+    start() {
+        this.stateManager.nextState(StatesEnum.MovingState)
     }
 
     tick(delta) {        

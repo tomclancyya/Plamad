@@ -9,7 +9,8 @@ export class Settings {
     botsAmount = 0
     tickerTimeLimitSec = 0 //(0 is infinity) after sec ticker will stop
 
-    networkAddress = "ws://192.168.0.111:8080"
+    networkAddress = "ws://192.168.0.108:8080"
+    eventsPerTick = 10 // how many events we consume per tick. if buffer contains more than 1
 
     dynamicSettings = new DynamicSettings()
 

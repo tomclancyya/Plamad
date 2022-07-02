@@ -5,6 +5,11 @@
     "exclude": [
         "node_modules",
         "**/node_modules/*",
-        "**/node_modules.nosync/*"
+        "**/node_modules.nosync/*",
+        "mini.js"
+    ],
+    "include": [
+        "node_modules.nosync/@pixi",
+        "node_modules/@pixi"
     ]
 }

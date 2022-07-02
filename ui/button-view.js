@@ -1,4 +1,4 @@
-import { Container } from "pixi.js";
+import { Container, Graphics, Text, TextStyle } from "pixi.js";
 
 
 // maybe will help with blurry text
@@ -21,15 +21,18 @@ import { Container } from "pixi.js";
     container = null;
      
     constructor (x, y, width, height, text, buttonColor = '0x2c3e50', parent, callback, callback2) {
-    let PIXI = require('pixi.js');
-    let button = new PIXI.Graphics();
-    let container = new PIXI.Container();
-    let textStyle = new PIXI.TextStyle({
+    let button = new Graphics();
+    let container = new Container();
+    let textStyle = new TextStyle({
         fill: 'white'
         //align : 'center'
     })
 
-    button.beginFill(0x2c3e50).lineStyle(5, 'red', 1);    
+    if (buttonColor)
+        button.beginFill(0x2c3e50).lineStyle(5, 'red', 1);    
+    else
+        button.beginFill(0x2c3e50, 0.01).lineStyle(0, 'blue', 1);        
+    
     button.drawRoundedRect(0, 0, width, height, 0);
     button.endFill();
     button.pivot.set(width / 2, height / 2);
@@ -43,7 +46,7 @@ import { Container } from "pixi.js";
         button.on('pointerdown', () => { callback2(container) })
 
 
-    let textObject = new PIXI.Text(text, textStyle);
+    let textObject = new Text(text, textStyle);
     textObject.anchor.set(0.5)
     textObject.resolution = 4;
 

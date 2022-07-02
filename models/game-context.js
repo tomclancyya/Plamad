@@ -2,7 +2,6 @@ import { Container } from "pixi.js";
 import { Application } from "pixi.js";
 
 import { Random } from "../engine/random";
-import { MutableInputManager } from "../input/mutable-input-manager";
 import { GameplayService } from "../stage/gameplay-service";
 import { MenuService } from "../stage/menu-service";
 import { Camera } from "./camera";
@@ -15,13 +14,6 @@ export class GameContext {
     * @type {Application}  
     */
    app
-    
-    /** 
-    * @type {MutableInputManager}   
-    */
-    input
-
-    keyboardInput
    
     /** 
     * @type {Scene}
@@ -43,9 +35,8 @@ export class GameContext {
     /** @type {Settings} */
     settings = new Settings()
 
-    constructor(app, input, random){
+    constructor(app, nothing, random){
         this.app = app;
-        this.input = input;
         this.random = random;
         this.camera = new Camera(app, this.settings)
     }

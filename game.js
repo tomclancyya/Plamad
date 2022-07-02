@@ -1,6 +1,5 @@
 const { default: Prando } = require('prando');
 const { Random } = require('./engine/random');
-const { MutableInputManager } = require('./input/mutable-input-manager');
 const { GameContext } = require('./models/game-context');
 const { MenuService } = require('./stage/menu-service');
 
@@ -27,17 +26,7 @@ module.exports = function (input) {
 
     let random = new Random(new Prando(1));
 
-
-    let inputManager = new MutableInputManager()
-
-    
-    // update inpur from player
-    app.ticker.add((delta) => {
-        inputManager.addInputPlayer(input)
-    })
-
-    let gameContext = new GameContext(app, inputManager, random);
-    gameContext.keyboardInput = input
+    let gameContext = new GameContext(app, null, random);
     gameContext.loadMenu();
 
     console.log(gameContext)
