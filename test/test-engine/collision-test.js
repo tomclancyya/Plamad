@@ -11,6 +11,7 @@ export class CollisionTest {
         return {
             "collision test should.only":
             {"should delete the smaller planet when different planets have meet": () => {                                
+                console.log();
                 let scene = new Scene (1000)
 
                 let position1 = new Vector2 (50, 50)
@@ -20,7 +21,7 @@ export class CollisionTest {
                 }// new PlanetView(0, 0, 100, 'text', '0x6699ff', 'gameplay');
                 let planet1 = new Planet (planetView1, scene, null, 'planet1');
                 planet1.moveToPosition(position1)
-                planet1.level = 2
+                planet1.level = 1
                 planet1.applyLevelStats()
 
                 let position2 = new Vector2 (50, 50)
@@ -31,26 +32,20 @@ export class CollisionTest {
                 let planet2 = new Planet (planetView2, scene, null, 'planet2');
                 planet2.moveToPosition(position2)
                 planet2.level = 3
-                planet2.applyLevelStats()
-                                
-                // let position2 = new Vector2 (50, 50)
-                // console.log('')
-                // console.log('')
-                // console.log('')
-                // console.log('planet1:')
-                // console.log(planet1)
-                // let planetView2 = new PlanetView(0, 0, 100, 'text', '0x6699ff', 'gameplay');
-                // let planet2 = new Planet (planetView2, scene2, null, 'planet2');
-                // planet.moveToPosition(position2)
-                // planet.level = 2
-                // planet.applyLevelStats()
-
-                let collision = new CollisionEngine (scene) 
-                collision.checkPlanetsCollision ()
-
-                return isBooleanEqual (scene.getPlanetsByNal)                
+                planet2.applyLevelStats()        
+                
+                let smallest = null
+                if (planet1.transform.size < planet2.transform.size) {
+                    smallest = planet1
+                  } else {
+                    smallest = planet2
+                  }                    
                
-            }         
+                let collision = new CollisionEngine (scene)                     
+                collision.checkPlanetsCollision ()      
+                
+                return isBooleanEqual(smallest.isActive, false)   
+            }            
             }              
         }
     }
